@@ -160,6 +160,27 @@ class Station_model extends CI_Model{
 	 }
 	 
 	 /**
+	 * function name : getStationByStationID
+	 * 
+	 * Description : 
+	 * Returns the data of all of the stations in the database.
+	 * 
+	 * Created date : 19-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getStationByStationID(){
+		$query = "SELECT * 
+				  FROM station
+				  WHERE station_ID like '{$this->station_ID}'";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 /**
 	 * function name : getStationNeighbors
 	 * 
 	 * Description : 

@@ -5,9 +5,10 @@ use Ratchet\WebSocket\WsServer;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 require dirname(__DIR__) . '\\vendor\\autoload.php';
-class Chat extends CI_Controller implements MessageComponentInterface {
+class Station_connector extends CI_Controller implements MessageComponentInterface {
     protected $clients;
     protected $loop;
+    
     public function __construct() {
         $this->clients = new \SplObjectStorage;
     }
@@ -15,43 +16,31 @@ class Chat extends CI_Controller implements MessageComponentInterface {
     public function onOpen(ConnectionInterface $conn) {
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
-
         echo "New connection! ({$conn->resourceId})\n";
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $numRecv = count($this->clients) - 1;
-        echo sprintf('Connection %d sending message "%s" to %d other connection%s' . "\n"
-            , $from->resourceId, $msg, $numRecv, $numRecv == 1 ? '' : 's');
-		if(is_numeric($msg)){
-			$this->load->model("a_model");
-			$msg = $this->a_model->increment($msg);
-		}
-        foreach ($this->clients as $client) {
-			
-           // if ($from !== $client) {
-                // The sender is not the receiver, send to each client connected
-                $client->send($from->resourceId .": ".$msg);
-           // }
-        }
+        echo sprintf('Connection %d sending message "%s"\n'
+            , $from->resourceId, $msg);
+        
+        $msg = shell_exec("php index.php station receive_message ".$msg);
     }
 
     public function onClose(ConnectionInterface $conn) {
         // The connection is closed, remove it, as we can no longer send it messages
         $this->clients->detach($conn);
-
         echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e) {
         echo "An error has occurred: {$e->getMessage()}\n";
 
-        //$conn->close();
+        $conn->close();
     }
 }
 
-    //require dirname(__DIR__) . '\\vendor\\autoload.php';
-
+    
     $server = IoServer::factory(
         new HttpServer(
             new WsServer(

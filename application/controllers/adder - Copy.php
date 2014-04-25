@@ -6,14 +6,15 @@ class Adder extends CI_Controller {
 	 public function __construct()
     {
         parent::__construct();
+        //
     }
     
     
 	public function index($num)
 	{
-		$this->load->model("highway_ model");
-		$num = $this->highway_ model->increment($num);
-		echo $num;
+		$this->load->model('highway_model');
+		$num = $this->highway_model->increment($num);
+		echo $num.PHP_EOL;
 	}
 }
 

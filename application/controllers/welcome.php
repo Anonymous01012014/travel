@@ -22,6 +22,8 @@ class Welcome extends CI_Controller {
 		$query = "select top 10 * from site";
 		$query = $this->db->query($query);
 		var_dump($query->result_array());
+		$this->load->model('highway_model');
+		echo $this->highway_model->increment(5);
 	}
 }
 
