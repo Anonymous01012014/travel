@@ -176,4 +176,24 @@ class Passing_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+	 
+	 /**
+	 * function name : getLastStationPassing
+	 * 
+	 * Description : 
+	 * Returns the last passing for a station in the database.
+	 * 
+	 * Created date : 25-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat*
+	 * contact : molham225@gmail.com
+	 */
+	 public function getLastStationPassing(){
+		$query = "SELECT MAX(id) ,passing_time FROM passing
+				  where station_ID={$this->station_ID}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
 }

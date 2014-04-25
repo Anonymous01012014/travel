@@ -159,8 +159,4 @@ class Highway_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
-	 
-	 public function increment($a){
-		return ++$a;
-	}
 }
