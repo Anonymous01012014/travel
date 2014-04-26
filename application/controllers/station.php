@@ -1,5 +1,5 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-<<<<<<< HEAD
+
 /**
 	 * Filename: station.php
 	 * Description: 
@@ -108,18 +108,10 @@ class Station extends CI_Controller {
 		
 		$this->station_model->station_ID = $station_ID;
 	}
-}
 
 /* End of file welcome.php */
 /* Location: ./application/controllers/welcome.php */
-=======
 
-class Station extends CI_Controller {
-
-	public function index()
-	{
-		$this->load->view('welcome_message');
-	}
 	
 	public function pass($station_id,$mac,$passing_time)
 	{
@@ -186,4 +178,4 @@ class Station extends CI_Controller {
 	}
 	
 }
->>>>>>> 8bcbcd2e628ecd9b5c5294abc41939c681956332
+
