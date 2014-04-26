@@ -181,10 +181,10 @@ class Station_model extends CI_Model{
 	 }
 	 
 	 /**
-	 * function name : getStationNeighbors
+	 * function name : getStationsbyHighway
 	 * 
 	 * Description : 
-	 * Returns the data of all Neighbors of the station in the database.
+	 * Returns the Highway stations in the database.
 	 * 
 	 * Created date : 21-04-2014
 	 * Modification date : ---
@@ -192,10 +192,67 @@ class Station_model extends CI_Model{
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
 	 */
-	 public function getStationNeighbors(){
+	 public function getStationsbyHighway(){
+		$query = "SELECT  
+				  FROM statioin
+				  where highway_id={$this->id}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 
+	 
+	 
+	 /**
+	 * function name : addNeighbors
+	 * 
+	 * Description : 
+	 * add station's neighbors.First add the neighbors to the current station 
+	 * then add the current station as a neighbor to each of its neighbors.
+	 * 
+	 * parameters:
+	 * 	
+	 * Created date : 19-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function addNeighbors($distances){
+		$CI =& getInstance();
+		//load neighbor model
+		$CI->load->model("neighbor_model");
+		//adding the neighbors to the current station
+		foreach($neighbors as $neighbor){
+			//inserting neighbor model fields
+			$CI->neighbor_model->station = $this->id;
+			$CI->neighbor_model->neighbor = $neighbor;
+			$
+		}
+	 }
+	 
+	 /**
+	 * function name : getStationsWithOneNeighbor
+	 * 
+	 * Description : 
+	 * Gets the stations with only one neighbor and in the specified highway
+	 * 
+	 * parameters:
+	 * 	
+	 * Created date : 19-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getStationsWithOneNeighbor(){
 		$query = "SELECT * 
-				  FROM neighbor
-				  where station={$this->id}";
+				  FROM station
+				  where highway_id ={$this->highway_id}
+					AND count(SELECT id 
+								FROM neighbor 
+								WHERE {$this->id} = station) = 1";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

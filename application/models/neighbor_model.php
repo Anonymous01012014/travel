@@ -20,10 +20,10 @@ class Neighbor_model extends CI_Model{
 	var $id;
 	
 	//The id of the station for which we are defining the neighbor.
-	var $station = "";
+	var $station_id = "";
 	
 	//The id of the station that is a neighbor for the specified station.
-	var $neighbor = "";
+	var $neighbor_id = "";
 	
 	//The distance between the station and its neighbor in miles.
 	var $distance = "";
@@ -57,13 +57,13 @@ class Neighbor_model extends CI_Model{
 	 */
 	 public function addNeighbor(){
 		$query = "INSERT INTO neighbor(
-							station,
-							neighbor,
+							station_id,
+							neighbor_id,
 							distance
 						) 
 						VALUES (
-							'{$this->station}',
-							'{$this->neighbor}',
+							'{$this->station_id}',
+							'{$this->neighbor_id}',
 							'{$this->distance}'
 						);
 					";
@@ -84,7 +84,7 @@ class Neighbor_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function deleteNeighbor(){
-		$query = "delete from highway
+		$query = "delete from neighbor
 	 			  where id = {$this->id}";
 		$this->db->query($query);
 		return true;
@@ -105,8 +105,8 @@ class Neighbor_model extends CI_Model{
 	 public function modifyNeighbor(){
 		$query = "UPDATE neighbor
 				  SET
-					station = {$this->station},
-					neighbor = {$this->neighbor},
+					station_id = {$this->station_id},
+					neighbor_id = {$this->neighbor_id},
 					distance = {$this->distance}			
 	 			  WHERE id = {$this->id}";
 		$this->db->query($query);
@@ -134,7 +134,7 @@ class Neighbor_model extends CI_Model{
 	 }
 	 
 	 /**
-	 * function name : getAllNeighborsByStationId
+	 * function name : getNeighborsByStationId
 	 * 
 	 * Description : 
 	 * Returns the data of all of the neighbors of the specified station in the database.
@@ -145,13 +145,15 @@ class Neighbor_model extends CI_Model{
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
 	 */
-	 public function getAllNeighborsByStationId(){
+	 public function getNeighborsByStationId(){
 		$query = "SELECT * 
 				  FROM neighbor
-				  Where station = {$this->station}";
+				  Where station = {$this->station_id}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+	 
+	 
 	 
 }

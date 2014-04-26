@@ -140,21 +140,21 @@ class Highway_model extends CI_Model{
 	 }
 	 
 	 /**
-	 * function name : getStationsbyHighway
+	 * function name : getHighwayByName
 	 * 
 	 * Description : 
 	 * Returns the Highway stations in the database.
 	 * 
-	 * Created date : 21-04-2014
+	 * Created date : 26-04-2014
 	 * Modification date : ---
 	 * Modfication reason : ---
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
 	 */
-	 public function getStationsbyHighway(){
+	 public function getHighwayByName(){
 		$query = "SELECT  
-				  FROM statioin
-				  where high_way_id={$this->id}";
+				  FROM highway
+				  where name={$this->name}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
