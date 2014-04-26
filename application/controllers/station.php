@@ -109,10 +109,16 @@ class Station extends CI_Controller {
 		$this->station_model->station_ID = $station_ID;
 	}
 
-/* End of file welcome.php */
-/* Location: ./application/controllers/welcome.php */
-
-	
+	/**
+	 * Function name : pass
+	 * 
+	 * Description: 
+	 * This function adds new passing  to the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
 	public function pass($station_id,$mac,$passing_time)
 	{
 		//loading  passing model
@@ -140,6 +146,18 @@ class Station extends CI_Controller {
 		
 	}
 	
+	
+	/**
+	 * Function name : addTraveller
+	 * 
+	 * Description: 
+	 * This function adds new Traveller  to the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
+	 
 	public function addTraveller($mac)
 	{
 		//loading traveller model
@@ -164,6 +182,18 @@ class Station extends CI_Controller {
 		
 	}
 	
+	
+	/**
+	 * Function name : addTravel
+	 * 
+	 * Description: 
+	 * This function adds new Travel  to the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
+	 
 	public function addTravel($pass_from_id,$pass_to,$date1,$date2);
 	{
 		//loading  travel model
