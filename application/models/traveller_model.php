@@ -133,5 +133,26 @@ class Traveller_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+
+	/**
+	 * function name : getTravellerID
+	 * 
+	 * Description : 
+	 * Returns the id of the travellers by mac address from the database.
+	 * 
+	 * Created date : 25-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat*
+	 * contact : molham225@gmail.com
+	 */
+	 public function getTravellerID(){
+		$query = "SELECT id 
+				  FROM traveller
+				  where mac_address={$this->mac_address}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
 	 
 }
