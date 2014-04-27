@@ -158,11 +158,26 @@ class Station extends CI_Controller {
 		//execute station adding function
 		$station_id = $this->station_model->addStation();
 		
-		/* finding the new station's neighbors */
-		//The distance limit that if exceeded the station isn't considered a neioghbor
-		//It's measured in meters
-		$neighbor_limit = 1000;
-		//prepare the neighbors array
+		/* finding and adding the new station's neighbors */
+		findStationNeighbors($station_id);
+			
+		/* recalculate highways beginning and ending stations */
+		determineHighwayTerminals($highway_id);
+	}
+	
+	
+	/**
+	 * Function name : findStationNeighbors
+	 * 
+	 * Description: 
+	 * This function finds and adds the new station's neighbors.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat
+	 * contact: molham225@gmail.com
+	 */
+	 public function findStationNeighbors(){
+		//prepare the neighbors array which is an array of the indeces of the neighbors in the stations array
 		$neighbors = array()
 		//get all of the highway's stations
 		$this->load->model('station_model');
@@ -171,14 +186,13 @@ class Station extends CI_Controller {
 		//preparing origin and destination distances
 		$origin = "";
 		$destinations = "";
-		$destinations = array();
 		//The order of the station in the stations' array
 		$station_order = 0;
 		//setting the origin and destinations of google's distance matrix request
 		$order = 0;
 		foreach($stations as $station){
 			if($station->id == $station_id){
-				$origin[] = $station->lat.",".$station->long);
+				$origin[] = $station->lat.",".$station->long;
 				$station_order = $order;
 			}else{
 				if($destinations == "")
@@ -203,39 +217,59 @@ class Station extends CI_Controller {
 			foreach($decoded->rows->elements as element){
 				$distances[] = element["distance"]->value;
 			}
+			//finding the nearest station's index
+			$nearest = array_keys($distances, min($distances));
+			//take the first index
+			$nearest = $nearest[0];
+			$neighbors[] = $nearest;
 			
-			for($i=0;$i<count($distances)){
-				//to skip the current station's index
-				if($i >= $station_order){
-					$index = $i+1;
-				}else{
-					$index = $i;
+			/* get the new neighbor's neighbors */
+			//loading neighbor model
+			$this->load->model("neighbor_model");
+			//filling the model's fields
+			$this->neighbor_model->station_id = $stations[$neighbors[0]]['id'];
+			$n_neighbors = $this->neighbor_model->getNeighborsByStationId();
+			
+			foreach($n_neighbors as $n_neighbor){
+				//get the distance between this neighbor and the original station(the newly deployed)
+				$distance = PHP_INT_MAX;
+				//the index of the neighbor in the stations array
+				$n_index = -1;
+				for($i=0;$i<count($distances);$i++){
+					if($stations[$i]['id'] == $n_neighbor['neighbor_id']){
+						$distance = $distances[$i];
+						$n_index = $i;
+						break;
+					}
 				}
-				//if the distance isn't greater than neighbor limit add the station id to neighbors array
-				if($distance[$i] <= $neighbor_limit){
-					//loading neighbor model
-					$this->load->model("neighbor_model");
-					//adding the neighbor to current station
-					$this->neighbor_model->station_id = $station_id;
-					$this->neighbor_model->neighbor_id = $stations[$index];
-					$this->neighbor_model->distance = $distance[$i];
+				//if the distance between the original station and its neighbor's neighbor is less than 
+				//the distance between the neighbor and the neighbor's neighbor then the neighbor's 
+				//neighbor is a neighbor to the original station
+				if($distance < $n_neighbor['distance']){
+					// add the neighbor to the station's neighbors
+					$neighbors[] = $n_index;
+					//delete the old neighborhood relationship
+					$this->neighbor_model->id = $n_neighbor['id'];
+					$this->neighbor_model->deleteNeighbor();
 					
-					$this->neighbor_model->addNeighbor();
+					//delete the opposite neighborhood relation
+					/*$this->neighbor_model->station_id = $n_neighbor['neighbor_id'];
+					$this->neighbor_model->neighbor_id = $neighbors[0]['id'];
 					
-					//adding the current station as a neighbor to its neighbor
-					$this->neighbor_model->station_id = $stations[$index];
-					$this->neighbor_model->neighbor_id = $station_id;
-					$this->neighbor_model->distance = $distance[$i];
-					
-					$this->neighbor_model->addNeighbor();
+					$this->neighbor_model->deleteNeighborByStationAndNeighbor();*/
 				}
 			}
 			
-			/* recalculate highways beginning and ending stations */
-			
-			 
+			//adding the new neighbors to the current station in the database
+			foreach($neighbors as $neighbor){
+				//add the neighborto the station
+				$this->neighbor_model->station_id = $stations[$order]['id'];
+				$this->neighbor_model->neighbor_id = $stations[$neighbor]['id'];
+				$this->neighbor_model->distance = $distances[$neighbor];
+				$this->neighbor_model->addNeighbor();
+			}
 		}
-	}
+	 }
 	
 	
 	

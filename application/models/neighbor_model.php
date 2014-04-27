@@ -89,6 +89,25 @@ class Neighbor_model extends CI_Model{
 		$this->db->query($query);
 		return true;
 	 }
+	 /**
+	 * function name : deleteNeighborByStationAndNeighbor
+	 * 
+	 * Description : 
+	 * delete the neighbor of station and neighbor's ads.
+	 * 
+	 * Created date : 27-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function deleteNeighborByStationAndNeighbor(){
+		$query = "delete from neighbor
+	 			  where station_id = {$this->station_id}
+					AND neighbor_id = {$this->neighbor_id}";
+		$this->db->query($query);
+		return true;
+	 }
 	 
 	 /**
 	 * function name : modifyNeighbor
