@@ -172,6 +172,26 @@ class Neighbor_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+	 /**
+	 * function name : getNeighborsByNeighborId
+	 * 
+	 * Description : 
+	 * Returns the data of all of the neighbors of the specified neighbor in the database.
+	 * 
+	 * Created date : 28-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getNeighborsByNeighborId(){
+		$query = "SELECT * 
+				  FROM neighbor
+				  Where neighbor_id = {$this->neighbor_id}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
 	 
 	 
 	 
