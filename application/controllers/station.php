@@ -159,11 +159,16 @@ class Station extends CI_Controller {
 		//execute station adding function
 		$station_id = $this->station_model->addStation();
 		
+		//get all of the highway's stations
+		$this->load->model('station_model');
+		$this->station_model->highway_id = $highway_id;
+		$highway_stations = $this->station_model->getStationsbyHighway();
+		
 		/* finding and adding the new station's neighbors */
-		findStationNeighbors($station_id,$highway,$isTwoWay);
+		findStationNeighbors($station_id,$highway,$highway_id,$highway_stations,$isTwoWay);
 			
 		/* recalculate highways beginning and ending stations */
-		determineHighwayTerminals($highway_id,$highway);
+		determineHighwayTerminals($highway,$highway_id,$highway_stations);
 	}
 	
 	
@@ -188,20 +193,13 @@ class Station extends CI_Controller {
 	 *				else	
 	 *					1- for each neighbor can be reached from A  (we call it B) (B is neighbor to A)
 	 *						 if the distance from N to B is less than the distance from A to B 
-	 *							then  1- we delete the neighborhood relationship from A to B.
-	 *								  2- add a new neighborhood relationship from N to B.
+	 *							then  1- we delete the neighborhood relationship from A to B and from B to A.
+	 *								  2- add a new neighborhood relationship from N to B and from B to N.
 	 *							 else
 	 *								  we do nothing.
-	 *	
-	 *					2- for each station (call it C) leads to A directly (A is neighbor to C)
-	 *						 if the distance from C to N is less than the distance from C to A
-	 *							then 1- we delete the neighborhood relationship from C to A.
-	 *								 2- add a new neighborhood relationship from  C to N.
-	 *							else
-	 *								 we do nothing.
 	 *			 
-	 *					3- add a new neighborhood relationship from N to A.
-	 *					4- add a new neighborhood relationship from A to N.
+	 *					2- add a new neighborhood relationship from N to A.
+	 *					3- add a new neighborhood relationship from A to N.
 	 *						 
 	 *		else (A != A1)(the highyway is one direction)
 	 *			if this is the second station in the highway
@@ -231,183 +229,300 @@ class Station extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	 public function findStationNeighbors($station_id,$highway_new,$isTwoWay){
+	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations,$isTwoWay){
 		 //if the new station is not the first one
-		if(!$highway_new){
-		//load the neighbor model
-		$this->load->model("neighbor_model");	
-		//prepare the neighbors array which is an array of the indeces of the neighbors in the stations array
-		$neighbors = array()
-		//get all of the highway's stations
-		$this->load->model('station_model');
-		$this->station_model->highway_id = $highway_id;
-		$stations = $this->station_model->getStationsbyHighway();
-		//preparing origin and destination distances
-		$origin = "";
-		$destinations = "";
-		//The order of the station in the stations' array
-		$station_order = 0;
-		//setting the origin and destinations of google's distance matrix request
-		$order = 0;
-		foreach($stations as $station){
-			if($station->id == $station_id){
-				$origin[] = $station->lat.",".$station->long;
-				$station_order = $order;
-			}else{
-				if($destinations == "")
-					$destinations = $station->lat.",".$station->long;
-				else
-					$destinations .= "|".$station->lat.",".$station->long;
-				$order++;
-			}
-			
-		}
-		//if there is more than one station in the highway
-		if($destinations !== ""){
-			//prepare distances arrays
-			$distances = array();//forward distances (from the new station to the other stations)
-			$distances_back = array();//backward distances (from the other stations to the new station)
-			//loading the curl helper
-			$this->load->helper("curl_helper"); 
-			//forming the url to be sent
-			$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
-			// send the request and get the response body
-			$body = send_request($url);
-			//decode the json encoded body
-			$decoded = json_decode($body);
-			//extracting distances from the decoded object and put them in the distances array
-			foreach($decoded->rows->elements as element){
-				$distances[] = element["distance"]->value;
-			}
-			//finding the nearest station's index in forward direction
-			$nearest = array_keys($distances, min($distances));
-			//take the first index
-			$nearest = $nearest[0];
-			
-			//getting the backward(from all the other stations to the new station) distances
-			$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
-			// send the request and get the response body
-			$body = send_request($url);
-			//decode the json encoded body
-			$decoded = json_decode($body);
-			//extracting distances from the decoded object and put them in the distances array
-			foreach($decoded->rows as row){
-				$distances_back[] = ->elements->distance->value;
-			}
-			//finding the nearest station's index in backward direction
-			$nearest_back = array_keys($distances_back, min($distances_back));
-			$nearest_back = $nearest_back[0];
-			//if the highway is bidirectional
-			if($isTwoWay){
-				//if this is the second station to be added to the highway
-				if(count($stations) == 2){
-					//add each of the stations as a neighbor to the other one
-					$this->neighbor_model->station_id = $stations[0]['id'];//the old station
-					$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
-					$this->neighbor_model->distatnce = $distances_back[0];//the backward distance
-					
-					$this->neighbor_model->addNeighbor();
-					$this->neighbor_model->station_id = $stations[0]['id'];//the new station
-					$this->neighbor_model->neighbor_id = $stations[1]['id'];//the old station
-					$this->neighbor_model->distatnce = $distances[0];//the forward distance
-					
-					$this->neighbor_model->addNeighbor();
+		if(!$highway){
+			//load the neighbor model
+			$this->load->model("neighbor_model");	
+			//prepare the neighbors array which is an array of the indeces of the neighbors in the stations array
+			$neighbors = array()
+			//preparing origin and destination distances
+			$origin = "";
+			$destinations = "";
+			//The order of the station in the stations' array
+			$station_order = 0;
+			//setting the origin and destinations of google's distance matrix request
+			$order = 0;
+			foreach($stations as $station){
+				if($station->id == $station_id){
+					$origin[] = $station->lat.",".$station->long;
+					$station_order = $order;
 				}else{
-					
+					if($destinations == "")
+						$destinations = $station->lat.",".$station->long;
+					else
+						$destinations .= "|".$station->lat.",".$station->long;
+					$order++;
 				}
 				
 			}
-			
-			/* get the new neighbor's neighbors */
-			//loading neighbor model
-			$this->load->model("neighbor_model");
-			//filling the model's fields
-			$this->neighbor_model->station_id = $stations[$neighbors[0]]['id'];
-			$n_neighbors = $this->neighbor_model->getNeighborsByStationId();
-			
-			foreach($n_neighbors as $n_neighbor){
-				//get the distance between this neighbor and the original station(the newly deployed)
-				$distance = PHP_INT_MAX;
-				//the index of the neighbor in the stations array
-				$n_index = -1;
-				for($i=0;$i<count($distances);$i++){
-					if($stations[$i]['id'] == $n_neighbor['neighbor_id']){
-						$distance = $distances[$i];
-						$n_index = $i;
-						break;
-					}
+			//if there is more than one station in the highway
+			if($destinations !== ""){
+				//prepare distances arrays
+				$distances = array();//forward distances (from the new station to the other stations)
+				$distances_back = array();//backward distances (from the other stations to the new station)
+				//loading the curl helper
+				$this->load->helper("curl_helper"); 
+				//forming the url to be sent
+				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
+				// send the request and get the response body
+				$body = send_request($url);
+				//decode the json encoded body
+				$decoded = json_decode($body);
+				//extracting distances from the decoded object and put them in the distances array
+				foreach($decoded->rows->elements as element){
+					$distances[] = element["distance"]->value;
 				}
-				//if the distance between the original station and its neighbor's neighbor is less than 
-				//the distance between the neighbor and the neighbor's neighbor then the neighbor's 
-				//neighbor is a neighbor to the original station
-				if($distance < $n_neighbor['distance']){
-					// add the neighbor to the station's neighbors
-					$neighbors[] = $n_index;
-					//delete the neighborhood relationship between the neighbor 
-					//and its neighbor and add the new station as a neighbor to 
-					//the current neighbor instead or we can just modify the current neighbor row in the database
-					$this->neighbor_model->id = $n_neighbor['id'];
-					$this->neighbor_model->station_id = $n_neighbor['station_id'];
-					$this->neighbor_model->neighbor_id = $station_id;
-					$this->neighbor_model->distance = $distances[$neighbors[0]];
-					
-					break;//this break is put on the basis of that there are maximum two neighbors to a single station
-					
-				}
-			}
-			
-			//adding the new neighbors to the current station in the database
-			foreach($neighbors as $neighbor){
-				//add the neighborto the station
-				$this->neighbor_model->station_id = $stations[$order]['id'];
-				$this->neighbor_model->neighbor_id = $stations[$neighbor]['id'];
-				$this->neighbor_model->distance = $distances[$neighbor];
-				$this->neighbor_model->addNeighbor();
-			}
-			
-			//getting the stations that are neigbors to the nearest neighbor to the new station
-			$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];
-			$neighbors_n = $this->neighbor_model->getNeighborsByNeighborId();
-			
-			//looping on the neighbors_n to learn the station that the new station is neighbor to
-			foreach($neighbors_n as $neighbor_n){
-				//skip the new station if found
-				if($neighbor_n['id'] == $station_id){
-					continue;
-				}
-				//get the distance betweenthe original station(the newly deployed) and this neighbor 
-				$distance = PHP_INT_MAX;
-				//the index of the neighbor in the stations array
-				$index_n = -1;
-				for($i=0;$i<count($distances);$i++){
-					if($stations[$i]['id'] == $neighbor_n['station_id']){
-						$distance = $distances[$i];
-						$index_n = $i;
-						break;
-					}
-				}
+				//finding the nearest station's index in forward direction
+				$nearest = array_keys($distances, min($distances));
+				//take the first index
+				$nearest = $nearest[0];
 				
-				//if the distance between the original station(new) and this neighbor is less than 
-				//the distance between this neighbor and its neighbor then this neighbor has the
-				//station as neighbor instead of its neighbor
-				if($distance < $n_neighbor['distance']){
-					//delete the neighborhood relationship between the neighbor 
-					//and its neighbor and add the new station as a neighbor to 
-					//the current neighbor instead .Or we can just modify the current neighbor row in the database
-					$this->neighbor_model->id = $neighbor_n['id'];
-					$this->neighbor_model->station_id = $neighbor_n['station_id'];
-					$this->neighbor_model->neighbor_id = $station_id;
-					$this->neighbor_model->distance = $distances[$index_n];
-					
-					break;//this break is put on the basis of that there are maximum two neighbors to a single station
-					
+				//getting the backward(from all the other stations to the new station) distances
+				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
+				// send the request and get the response body
+				$body = send_request($url);
+				//decode the json encoded body
+				$decoded = json_decode($body);
+				//extracting distances from the decoded object and put them in the distances array
+				foreach($decoded->rows as row){
+					$distances_back[] = ->elements->distance->value;
+				}
+				//finding the nearest station's index in backward direction
+				$nearest_back = array_keys($distances_back, min($distances_back));
+				$nearest_back = $nearest_back[0];
+				//if the highway is bidirectional
+				if($isTwoWay){
+					//if this is the second station to be added to the highway
+					if(count($stations) == 2){
+						//add each of the stations as a neighbor to the other one
+						$this->neighbor_model->station_id = $stations[0]['id'];//the old station
+						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
+						$this->neighbor_model->distatnce = $distances_back[0];//the backward distance
+						
+						$this->neighbor_model->addNeighbor();
+						$this->neighbor_model->station_id = $stations[0]['id'];//the new station
+						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the old station
+						$this->neighbor_model->distatnce = $distances[0];//the forward distance
+						
+						$this->neighbor_model->addNeighbor();
+					}else if(count($stations) > 2){
+						
+						//We consider that the nearest station is a neighbor
+						$neighbors[] = $nearest; 
+						//get the neighbors of the nearest station
+						$this->neighbor_model->station_id = $stations[$nearest]['id'];
+						
+						$n_neighbors = $this->neighbor_model->getNeighborsByStationId();
+						//get the other neighbor of the new station
+						foreach($n_neighbors as $n_neighbor){
+							//get the distance between this neighbor and the original station(the newly deployed)
+							$distance = PHP_INT_MAX;
+							//the index of the neighbor in the stations array
+							$n_index = -1;
+							for($i=0;$i<count($distances);$i++){
+								if($stations[$i]['id'] == $n_neighbor['neighbor_id']){
+									$distance = $distances[$i];
+									$n_index = $i;
+									break;
+								}
+							}
+							//if the nearst's neighbor's distance from the new station is less than its distatnce 
+							//from the nearest delete this station from the nearest's neighbors and add it as a 
+							//neighbor to the new station
+							if($distance < $n_neighbor['distance']){
+								// add the neighbor to the station's neighbors
+								$neighbors[] = $n_index;
+								//delete the neighborhood relationships between the nearest and its neighbor
+								$this->neighbor_model->id = $n_neighbor['id'];
+								$this->neighbor_model->deleteNeighbor();
+								
+								$this->neighbor_model->station_id = $n_neighbor['neighbor_id'];
+								$this->neighbor_model->neighbor_id = $n_neighbor['station_id'];
+								$this->neighbor_model->deleteNeighborByStationAndNeighbor();
+								
+								break;//this break is put on the basis of that there are maximum two neighbors to a single station
+								
+							}
+						}
+						
+						//adding the neighbors relationships for the new station
+						foreach($neighbors as $neighbor){
+							//add each of the stations as a neighbor to the other one
+							$this->neighbor_model->station_id = $stations[$neighbor]['id'];//the old station
+							$this->neighbor_model->neighbor_id = $station_id;//the new station
+							$this->neighbor_model->distatnce = $distances_back[$neighbor];//the backward distance
+							
+							$this->neighbor_model->addNeighbor();
+							
+							$this->neighbor_model->station_id = $station_id;//the new station
+							$this->neighbor_model->neighbor_id = $stations[$neighbor]['id'];//the old station
+							$this->neighbor_model->distatnce = $distances[$neighbor];//the forward distance
+							
+							$this->neighbor_model->addNeighbor();
+						}
+					}
+				}else{//if the road is one-way
+					//if this is the second station to be added to the highway
+					if(count($stations) == 2){
+						//if the foreward distance is less than the backward distance
+						if($distances[0] < $distances_back[0]){
+							//the road direction is forward so add the old station as a neighbor to the new one.
+							$this->neighbor_model->station_id = $station_id;//the new statoin id
+							$this->neighbor_model->neighbor_id = $stations[0]['id'];//the old station id
+							$this->neighbor_model->distance = $distances[0];//the forward distance
+							
+							$this->neighbor_model->addNeighbor();					
+						}else{//if the backward distance is less than the foreward distance
+							//the road direction is backward so add the new station as a neighbor to the old one.
+							$this->neighbor_model->station_id = $stations[0]['id'];//the old station id
+							$this->neighbor_model->neighbor_id = $station_id;//the new statoin id
+							$this->neighbor_model->distance = $distances_back[0];//the backward distance
+							
+							$this->neighbor_model->addNeighbor();	
+						}
+					}else if(count($station > 2)){
+						//if the foreward distance is less than the backward distance then the road flow direction is foreward
+						if($distances[0] < $distances_back[0]){
+							//add the nearest station as a neighbor to the new station
+							$this->neighbor_model->station_id = $station_id;// the new station
+							$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];// the neighbor of the new station
+							$this->neighbor_model->distance = $distances[$nearest];// the foreward distance 
+							
+							$this->neighbor_model->addNeighbor();
+							
+							//get the station that has the nearest station as a neighbor to it
+							$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];
+							
+							$n_neighbor = $this->neighbor_model->getNeighborsByNeighborId();
+							//if the new neighbor isn't a highway terminal
+							if(isset($n_neighbor[0])){
+								//modify this neighborhood relationship to become with the new station instead of the nearest station
+								$this->neighbor_model->id = $n_neighbor[0]['id'];
+								$this->neighbor_model->station_id = $n_neighbor[0]['station_id'];
+								$this->neighbor_model->neighbor_id = $station_id;
+								$n_index = -1;
+								//getting the distance from the new neighbor to the new station
+								for($i=0;$i<count($stations);$i++){
+									if($stations[$i]['id'] == $n_neighbor[0]['station_id']){
+										//get the index of the new neighbor in the stations array
+										$n_index = $i;
+										break;
+									}
+								}
+								if($n_index !== -1){// if the station was found in the stationss array
+									$this->neighbor_model->distance = $distances_back[$n_index];
+									$this->neighbor_model->addNeighbor();
+								}
+							}
+						}//the road direction is backward
+						else{
+							//get the neighbor of the nearest station
+							$this->neighbor_model->station_id = $stations[$nearest_back]['id'];
+							$n_neighbor = $this->neighbor_model->getNeighborsByStationId();
+							// if this station has neighbors
+							if(isset($n_neighbor[0])){
+								//modify this relationship in the database by replacing the neighbor_id with the new station id
+								$this->neighbor_model->id = $n_neighbor[0]['id'];
+								$this->neighbor_model->station_id = $n_neighbor[0]['station_id'];
+								$this->neighbor_model->neighbor_id = $station_id;
+								$this->neighbor_model->distance = $distances_back[$nearest_back];
+								
+								$this->neighbor_model->modifyNeighbor();
+								
+								//add the nearest's neaibor as a neighbopr to the new station
+								$this->neighbor_model->station_id = $station_id;
+								$this->neighbor_model->neighbor_id = $n_neighbor[0]['neighbor_id'];
+								//getting the distance from the new station to the nearest's neighbor
+								for($i=0;$i<count($stations);$i++){
+									if($stations[$i]['id'] ==  $n_neighbor[0]['neighbor_id']){
+										$n_index = $i;
+										break;
+									}
+								}
+								$this->neighbor_model->distance = $distances[$n_index];
+								
+								$this->neighbor_model->addNeighbor();
+								
+							}else{//if this  is a terminal
+								//just add the new station as a neighbor to the nearest station
+								$this->neighbor_model->station_id = $n_neighbor[0]['station_id'];
+								$this->neighbor_model->neighbor_id = $station_id;
+								$this->neighbor_model->distance = $distances_back[$nearest_back];
+								
+								$this->neighbor_model->addNeighbor();
+							}
+						}				
+					}
 				}
 			}
 		}	
-		}
 	 }
 	
-	
+	/**
+	 * Function name : determineHighwayTerminals
+	 * 
+	 * Description: 
+	 * determine the highway terminals.
+	 * 
+	 * created date: 29-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat
+	 * contact: molham225@gmail.com
+	 */
+	public function determineHighwayTerminals($highway,$highway_id,$stations){
+		//load the highway model
+		$this->load->model("highway_model");
+		//if the highway is new then it has only one station 
+		if($highway){
+			//add the station as the first and last stations of the highway
+			//fill model fields
+			$this->highway_model->start_station = $stations[0];
+			$this->highway_model->end_station = $stations[0];
+			$this->highway_model->id = $highway_id;
+			
+			$this->highway_model->setHighwayTerminals();
+		}else{
+			 //load the station model
+			$this->load->model('station_model');
+			//if the road is a two way
+			if($highway['two_way']){				
+				$this->station_model->highway_id = $highway_id;
+				//get the neighbor count for all the stations in the highway
+				$neighbor_counts = $this->station_model->getHighwayStationsNeighborCount($highway['two_way']);
+				//set the highway id in the highway model
+				$this->highway_model->id = highway_id;
+				//set the highway terminals in the model
+				//the terminal is a station that has only one neighbor
+				if(count($n_counts) == 2){//We assume that the highway has only two terminals
+						$this->highway_model->start_station = $n_counts[0]['id'];
+						$this->highway_model->end_station = $n_counts[1]['id'];
+				}
+				//set the highway terminals
+				$this->highway_model->setHighwayTerminals();
+				
+			}else{//if the road is one way
+				$this->load->model('station__model');
+				//set the highway id in the model
+				$this->station_model->highway_id = $highway_id;
+				//set the highway id in the highway model
+				$this->highway_model->id = $highway_id;
+				//the start station is the station that is not a neighbor to any other station on the highway
+				//get the start station
+				$start_station = $this->station_model->getOneWayHighwayFirstStation();
+				//if the start station was found
+				if(isset($start_station[0])){
+					$this->highway_model->start_station = $start_station[0]['id'];
+				}
+				//getting the last station in the highway
+				$neighbor_counts = $this->station_model->getHighwayStationsNeighborCount($highway['two_way']);
+				if(isset($neighbor_counts[0])){//if the last stationwas found
+					$this->highway_model->end_station = $neighbor_counts[0]['id'];
+				}
+				//setting the highway terminals
+				$this->highway_model->setHighwayTerminals();
+			}
+		}
+	}
 	
 	/**
 	 * Function name : findoutHighway

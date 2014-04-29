@@ -26,10 +26,10 @@ class Highway_model extends CI_Model{
 	var $type = "";
 	
 	//The id of the the first station in the highway.
-	var $start_station = "";
+	var $start_station = 0;
 	
 	//The id of the the last station in the highway.
-	var $end_station = "";
+	var $end_station = 0;
 	
 	//A flag that indicates if this higthway is bidirectional
 	$two_way = "";
@@ -143,6 +143,30 @@ class Highway_model extends CI_Model{
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
+	 }
+	 
+	 /**
+	 * function name : setHighwayTerminals
+	 * 
+	 * Description : 
+	 * sets the start and end stations of the given highway id.
+	 * 
+	 * Created date : 29-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function setHighwayTerminals(){
+		$query = "UPDATE highway
+				  SET 
+					start_station = {$this->start_station},
+					end_station = {$this->end_station}
+				  WHERE 
+					id = {$this->id}";
+					
+		$this->db->query($query);
+		return true;
 	 }
 	 
 	 /**

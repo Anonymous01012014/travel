@@ -193,7 +193,7 @@ class Station_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getStationsbyHighway(){
-		$query = "SELECT  
+		$query = "SELECT  *
 				  FROM statioin
 				  where highway_id={$this->id}";
 				  
@@ -201,35 +201,55 @@ class Station_model extends CI_Model{
 		return $query->result_array();
 	 }
 	 
-	 
-	 
-	 
 	 /**
-	 * function name : addNeighbors
+	 * function name : getHighwayStationsNeighborCount
 	 * 
 	 * Description : 
-	 * add station's neighbors.First add the neighbors to the current station 
-	 * then add the current station as a neighbor to each of its neighbors.
+	 * Returns the count of the neighbors of each station in the specified highway.
 	 * 
-	 * parameters:
-	 * 	
-	 * Created date : 19-04-2014
+	 * Created date :29-04-2014
 	 * Modification date : ---
 	 * Modfication reason : ---
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
 	 */
-	 public function addNeighbors($distances){
-		$CI =& getInstance();
-		//load neighbor model
-		$CI->load->model("neighbor_model");
-		//adding the neighbors to the current station
-		foreach($neighbors as $neighbor){
-			//inserting neighbor model fields
-			$CI->neighbor_model->station = $this->id;
-			$CI->neighbor_model->neighbor = $neighbor;
-			$
-		}
+	 public function getHighwayStationsNeighborCount($isTwoWay){
+		 $count = 0;//neighbor count for the last station in a one-way highway  = 0
+		 if($isTwoWay){
+			$count = 1;//neighbor count for a terminal station in a two-way highway  = 0
+		 }
+		$query = "SELECT  station.id as id ,count(neighbor.neighbor_id) as neighbor_count
+				  FROM station INNER JOIN neighbor ON station.id = neighbor.station_id
+				  where station.highway_id={$this->id}
+				  AND neighbor_count = {$count} 
+				  GROUP BY station.id,neighbor.neighbor_id ;";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 
+	 /**
+	 * function name : getOneWayHighwayFirstStation
+	 * 
+	 * Description : 
+	 * Returns the first station of a oneway highway
+	 * 
+	 * Created date :29-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getOneWayHighwayFirstStation(){
+		$query = "SELECT  station.id as id ,count(neighbor.station_id) as count
+				  FROM station INNER JOIN neighbor ON station.id = neighbor.neighbor_id
+				  where station.highway_id={$this->id}
+				  AND neighbor_count = 0
+				  GROUP BY station.id,neighbor.station_id ;";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
 	 }
 	 
 	 /**
