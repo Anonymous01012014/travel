@@ -65,6 +65,8 @@ class Station extends CI_Controller {
 			//if not add it
 			newStation($station_ID,$long,$lat,$isTwoWay);
 		}
+		//if this is n new passing
+		$this->newPass($station_id,$mac,$passing_time);
 	}
 	
 	/**
@@ -558,31 +560,65 @@ class Station extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
 	 */
-	public function pass($station_id,$mac,$passing_time)
+	public function newPass($station_id,$mac,$passing_time)
 	{
 		//loading  passing model
 		$this->load->model("passing_model");
-		
-		//adding new travel if not existed or get the mac record id 
-		$traveller_id =$this->addTraveller($mac);
-		
-		//get the last passing for this station 
-		$this->passing_model->station_id=$station_id;
-		$pass_from=$this->passing_model->getLastStationPassing();
-		
-		//prepare fields to add a new pass
-		$this->passing_model->passing_time=$passing_time
-		$this->passing_model->traveller_id=$traveller_id;
-		$this->passing_model->station_id=$station_id;
-		$pass_to=$this->passing_model->addPassing();
-		
-		//determine if we should add new travel
-		if(count($pass_from)>0)
-		{
-			//new travel should be added
-			$this->addTravel($pass_from[0]['id'],$pass_to[0]['id'],$pass_from[0]['passing_time'],$pass_to[0]['passing_time']);
+		//check if this traveller exists in the database
+		$traveller = $this->checkTraveller($mac);
+		if(!$traveller){
+			//adding new traveller if not existed or get the mac record id 
+			$traveller_id =$this->addTraveller($mac);
+			
+			//prepare fields to add a new pass
+			$this->passing_model->passing_time=$passing_time
+			$this->passing_model->traveller_id=$traveller_id;
+			$this->passing_model->station_id=$station_id;
+			$pass_to=$this->passing_model->addPassing();
+		}else{
+			$traveller_id = $traveller['id'];
+			//get the last passing for this station 
+			$this->passing_model->station_id=$station_id;
+			$pass_from=$this->passing_model->getLastStationPassing();
+			
+			//prepare fields to add a new pass
+			$this->passing_model->passing_time=$passing_time
+			$this->passing_model->traveller_id=$traveller_id;
+			$this->passing_model->station_id=$station_id;
+			$pass_to=$this->passing_model->addPassing();
+			
+			//determine if we should add new travel
+			if(count($pass_from)>0)
+			{
+				//new travel should be added
+				$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
+			}
 		}
+	}
+	
+	
+	/**
+	 * Function name : checkTraveller
+	 * 
+	 * Description: 
+	 * This function checks if the traveller exists in the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
+	 
+	public function checkTraveller($mac){
+		//loading traveller model
+		$this->load->model("traveller_model");
 		
+		//findout if the mac is allready existed
+		$this->traveller_model->mac_address=$mac;
+		$traveller = $this->traveller_model->getTravellerByMac();
+		if(isset($traveller[0])){
+			return $traveller[0];
+		}
+		return false;
 	}
 	
 	
@@ -604,21 +640,10 @@ class Station extends CI_Controller {
 		
 		//findout if the mac is allready existed
 		$this->traveller_model->mac_address=$mac;
-		$traveller_id=$this->passing_model->getTravellerID();
-		if(count($traveller_id)>0)
-		{
-			//the mac is allready existed and returning the traveller record id
-			return $traveller_id[0]['id'];
-		}
-		else
-		{
-			//adding new traveller
-			$this->traveller_model->mac_address=$mac;
-			$traveller_id=$this->traveller_model->addTravel();
-			//returning the new traveller record id
-			return $traveller_id[0]['id'];
-		}
-		
+		//adding new traveller
+		$traveller_id=$this->traveller_model->addTraveller();
+		//returning the new traveller record id
+		return $traveller_id;
 	}
 	
 	
@@ -633,17 +658,18 @@ class Station extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	 
-	public function addTravel($pass_from_id,$pass_to,$date1,$date2);
+	public function addTravel($pass_from,$pass_to,$date1,$date2);
 	{
 		//loading  travel model
 		$this->load->model("travel_model");
 		
 		//adding new travel
-		$this->travel_model->passing_from=$pass_from_id;
+		$this->travel_model->passing_from=$pass_from;
 		$this->travel_model->passing_to=$pass_to;
 		//caculating the travel duration in sec
-		$this->travel_model->travel_time=abs(strtotime($date2) - strtotime($date1));	
+		$this->travel_model->travel_time=strtotime($date2) - strtotime($date1);	
 		$this->travel_model->is_valid=true;	
+		$this->travel_model->addTravel();
 	}
 	/* End of file welcome.php */
 	/* Location: ./application/controllers/welcome.php */

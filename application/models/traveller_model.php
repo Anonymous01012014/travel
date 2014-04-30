@@ -23,10 +23,10 @@ class Traveller_model extends CI_Model{
 	var $mac_address = "";
 	
 	//type of the device
-	var $device_type = "";
+	var $device_type = 0;
 	
 	//The vehicle that the traveler used
-	var $vehicle_type = "";
+	var $vehicle_type = 0;
 	
 	
 	
@@ -69,7 +69,7 @@ class Traveller_model extends CI_Model{
 						);
 					";
 		$this->db->query($query);
-		return $this-db->insert_id;
+		return $this-db->insert_id();
 	 }
 	 
 	 /**
@@ -135,10 +135,9 @@ class Traveller_model extends CI_Model{
 	 }
 
 	/**
-	 * function name : getTravellerID
-	 * 
+	 * function name : getTravellerByMac
 	 * Description : 
-	 * Returns the id of the travellers by mac address from the database.
+	 * returns the traveller info specified by the given mac address.
 	 * 
 	 * Created date : 25-04-2014
 	 * Modification date : ---
@@ -146,7 +145,7 @@ class Traveller_model extends CI_Model{
 	 * Author : Ahmad Mulhem Barakat*
 	 * contact : molham225@gmail.com
 	 */
-	 public function getTravellerID(){
+	 public function getTravellerByMac(){
 		$query = "SELECT id 
 				  FROM traveller
 				  where mac_address={$this->mac_address}";

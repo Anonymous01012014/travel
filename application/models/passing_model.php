@@ -69,7 +69,7 @@ class Passing_model extends CI_Model{
 						);
 					";
 		$this->db->query($query);
-		return $this-db->insert_id;
+		return $this-db->insert_id();
 	 }
 	 
 	 /**
@@ -191,7 +191,7 @@ class Passing_model extends CI_Model{
 	 */
 	 public function getLastStationPassing(){
 		$query = "SELECT MAX(id) ,passing_time FROM passing
-				  where station_ID={$this->station_ID}";
+				  where station_id={$this->station_id}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
