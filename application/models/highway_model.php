@@ -32,7 +32,7 @@ class Highway_model extends CI_Model{
 	var $end_station = 0;
 	
 	//A flag that indicates if this higthway is bidirectional
-	$two_way = "";
+	var $two_way = "";
 	
 	
 	/**
@@ -115,7 +115,7 @@ class Highway_model extends CI_Model{
 	 public function modifyHighway(){
 		$query = "UPDATE highway
 				  SET
-					name = {$this->name},
+					name = '{$this->name}',
 					type = {$this->type},
 					start_station = {$this->start_station},
 					end_station = {$this->end_station},
@@ -158,6 +158,7 @@ class Highway_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function setHighwayTerminals(){
+		//var_dump( $this->start_station);
 		$query = "UPDATE highway
 				  SET 
 					start_station = {$this->start_station},
@@ -182,9 +183,9 @@ class Highway_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getHighwayByName(){
-		$query = "SELECT  
+		$query = "SELECT  *
 				  FROM highway
-				  where name={$this->name}";
+				  where name='{$this->name}'";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

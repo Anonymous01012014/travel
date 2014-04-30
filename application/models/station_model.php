@@ -90,7 +90,7 @@ class Station_model extends CI_Model{
 						);
 					";
 		$this->db->query($query);
-		return $this-db->insert_id;
+		return $this->db->insert_id();
 	 }
 	 
 	 /**
@@ -194,8 +194,8 @@ class Station_model extends CI_Model{
 	 */
 	 public function getStationsbyHighway(){
 		$query = "SELECT  *
-				  FROM statioin
-				  where highway_id={$this->id}";
+				  FROM station
+				  where highway_id={$this->highway_id}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
@@ -242,10 +242,10 @@ class Station_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getOneWayHighwayFirstStation(){
-		$query = "SELECT  station.id as id ,count(neighbor.station_id) as count
+		$query = "SELECT  station.id as id ,count(neighbor.station_id) as neighbor_count
 				  FROM station INNER JOIN neighbor ON station.id = neighbor.neighbor_id
 				  where station.highway_id={$this->id}
-				  AND neighbor_count = 0
+				  AND count(neighbor.station_id) = 0
 				  GROUP BY station.id,neighbor.station_id ;";
 				  
 		$query = $this->db->query($query);

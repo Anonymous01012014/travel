@@ -167,7 +167,7 @@ class Neighbor_model extends CI_Model{
 	 public function getNeighborsByStationId(){
 		$query = "SELECT * 
 				  FROM neighbor
-				  Where station = {$this->station_id}";
+				  Where station_id = {$this->station_id}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

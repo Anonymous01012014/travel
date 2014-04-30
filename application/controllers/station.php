@@ -135,9 +135,9 @@ class Station extends CI_Controller {
 	
 		/* getting the station's highway id */
 		//get the highway of the station
-		$highway_name = findoutHighway($long,$lat);
+		$highway_name = $this->findoutHighway($long,$lat);
 		//check if this highway is in the database
-		$highway = checkHighway($highway_name);
+		$highway = $this->checkHighway($highway_name);
 		if(!$highway){
 			//if it doesn't exist add it
 			//load the model
@@ -149,7 +149,7 @@ class Station extends CI_Controller {
 			//execute the addition function and get its id
 			$highway_id = $this->highway_model->addHighway();
 		}else{
-			$highway_id = $highway->id; 
+			$highway_id = $highway['id']; 
 		}
 		//filling the model fields
 		$this->station_model->station_ID = $station_ID;
@@ -167,10 +167,10 @@ class Station extends CI_Controller {
 		$highway_stations = $this->station_model->getStationsbyHighway();
 		
 		/* finding and adding the new station's neighbors */
-		findStationNeighbors($station_id,$highway,$highway_id,$highway_stations,$isTwoWay);
+		$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations,$isTwoWay);
 			
 		/* recalculate highways beginning and ending stations */
-		determineHighwayTerminals($highway,$highway_id,$highway_stations);
+		$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 	}
 	
 	
@@ -232,12 +232,14 @@ class Station extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations,$isTwoWay){
+		
 		 //if the new station is not the first one
-		if(!$highway){
+		if($highway){
+			echo 1;
 			//load the neighbor model
 			$this->load->model("neighbor_model");	
 			//prepare the neighbors array which is an array of the indeces of the neighbors in the stations array
-			$neighbors = array()
+			$neighbors = array();
 			//preparing origin and destination distances
 			$origin = "";
 			$destinations = "";
@@ -246,34 +248,38 @@ class Station extends CI_Controller {
 			//setting the origin and destinations of google's distance matrix request
 			$order = 0;
 			foreach($stations as $station){
-				if($station->id == $station_id){
-					$origin[] = $station->lat.",".$station->long;
+				if($station['id'] == $station_id){
+					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
+					echo $order."/n";
 				}else{
 					if($destinations == "")
-						$destinations = $station->lat.",".$station->long;
+						$destinations = $station['latitude'].",".$station['longitude'];
 					else
-						$destinations .= "|".$station->lat.",".$station->long;
+						$destinations .= "|".$station['latitude'].",".$station['longitude'];
 					$order++;
+					echo $order."/n";
 				}
 				
 			}
 			//if there is more than one station in the highway
 			if($destinations !== ""){
+				echo 2;
 				//prepare distances arrays
 				$distances = array();//forward distances (from the new station to the other stations)
 				$distances_back = array();//backward distances (from the other stations to the new station)
 				//loading the curl helper
 				$this->load->helper("curl_helper"); 
 				//forming the url to be sent
-				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
+				var_dump($origin);
+				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
-				foreach($decoded->rows->elements as element){
-					$distances[] = element["distance"]->value;
+				foreach($decoded->rows[0]->elements as $element){
+					$distances[] = $element->distance->value;
 				}
 				//finding the nearest station's index in forward direction
 				$nearest = array_keys($distances, min($distances));
@@ -281,22 +287,24 @@ class Station extends CI_Controller {
 				$nearest = $nearest[0];
 				
 				//getting the backward(from all the other stations to the new station) distances
-				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=Fmjtd%7Cluur2q0z20%2C75%3Do5-9ab25r";
+				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
-				foreach($decoded->rows as row){
-					$distances_back[] = ->elements->distance->value;
+				foreach($decoded->rows as $row){
+					$distances_back[] = $row->elements[0]->distance->value;
 				}
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
 				//if the highway is bidirectional
 				if($isTwoWay){
+					echo 3;
 					//if this is the second station to be added to the highway
 					if(count($stations) == 2){
+						echo 4;
 						//add each of the stations as a neighbor to the other one
 						$this->neighbor_model->station_id = $stations[0]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
@@ -309,7 +317,7 @@ class Station extends CI_Controller {
 						
 						$this->neighbor_model->addNeighbor();
 					}else if(count($stations) > 2){
-						
+						echo 5;
 						//We consider that the nearest station is a neighbor
 						$neighbors[] = $nearest; 
 						//get the neighbors of the nearest station
@@ -478,8 +486,8 @@ class Station extends CI_Controller {
 		if($highway){
 			//add the station as the first and last stations of the highway
 			//fill model fields
-			$this->highway_model->start_station = $stations[0];
-			$this->highway_model->end_station = $stations[0];
+			$this->highway_model->start_station = $stations[0]['id'];
+			$this->highway_model->end_station = $stations[0]['id'];
 			$this->highway_model->id = $highway_id;
 			
 			$this->highway_model->setHighwayTerminals();
@@ -503,7 +511,7 @@ class Station extends CI_Controller {
 				$this->highway_model->setHighwayTerminals();
 				
 			}else{//if the road is one way
-				$this->load->model('station__model');
+				$this->load->model('station_model');
 				//set the highway id in the model
 				$this->station_model->highway_id = $highway_id;
 				//set the highway id in the highway model
@@ -544,7 +552,11 @@ class Station extends CI_Controller {
 		//get the body of the request result
 		$body = send_request($url);
 		//decode it from json format
+		
+		
+		$body = substr($body, 14, -1); 
 		$code = json_decode($body);
+		//var_dump ($a);
 		//get the highway name froimthe decoded body
 		$highway = $code->results[0]->locations[0]->street;
 		return $highway;
@@ -571,7 +583,7 @@ class Station extends CI_Controller {
 			$traveller_id =$this->addTraveller($mac);
 			
 			//prepare fields to add a new pass
-			$this->passing_model->passing_time=$passing_time
+			$this->passing_model->passing_time=$passing_time;
 			$this->passing_model->traveller_id=$traveller_id;
 			$this->passing_model->station_id=$station_id;
 			$pass_to=$this->passing_model->addPassing();
@@ -582,7 +594,7 @@ class Station extends CI_Controller {
 			$pass_from=$this->passing_model->getLastStationPassing();
 			
 			//prepare fields to add a new pass
-			$this->passing_model->passing_time=$passing_time
+			$this->passing_model->passing_time=$passing_time;
 			$this->passing_model->traveller_id=$traveller_id;
 			$this->passing_model->station_id=$station_id;
 			$pass_to=$this->passing_model->addPassing();
@@ -658,7 +670,7 @@ class Station extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	 
-	public function addTravel($pass_from,$pass_to,$date1,$date2);
+	public function addTravel($pass_from,$pass_to,$date1,$date2)
 	{
 		//loading  travel model
 		$this->load->model("travel_model");
