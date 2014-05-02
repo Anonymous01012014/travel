@@ -63,7 +63,7 @@ class Station extends CI_Controller {
 		//check if the station exists in the datbase
 		if(!checkStation($station_ID)){
 			//if not add it
-			newStation($station_ID,$long,$lat,$isTwoWay);
+			newStation($station_ID,$long,$lat);
 		}
 		//if this is n new passing
 		$this->newPass($station_id,$mac,$passing_time);
@@ -127,12 +127,18 @@ class Station extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function newStation($station_ID,$long,$lat,$isTwoWay){
+	public function newStation($station_ID,$long,$lat){
+		/*isTwoWay from text to boolean
+		if($isTwoWay == 'false'){
+			$isTwoWay = false;
+		}else{
+			$isTwoWay = true;
+		}*/
 		//loading station model
 		$this->load->model('station_model');
 		//id of the highway
 		$highway_id = 0;
-	
+		//var_dump($isTwoWay);
 		/* getting the station's highway id */
 		//get the highway of the station
 		$highway_name = $this->findoutHighway($long,$lat);
@@ -144,7 +150,7 @@ class Station extends CI_Controller {
 			$this->load->model("highway_model");
 			//fill the model fields 
 			$this->highway_model->name = $highway_name;
-			$this->highway_model->isTwoWay = $isTwoWay;
+			//$this->highway_model->two_way = ($isTwoWay)? 1:0;
 			
 			//execute the addition function and get its id
 			$highway_id = $this->highway_model->addHighway();
@@ -167,7 +173,7 @@ class Station extends CI_Controller {
 		$highway_stations = $this->station_model->getStationsbyHighway();
 		
 		/* finding and adding the new station's neighbors */
-		$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations,$isTwoWay);
+		$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
 			
 		/* recalculate highways beginning and ending stations */
 		$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
@@ -206,24 +212,24 @@ class Station extends CI_Controller {
 	 *		else (A != A1)(the highyway is one direction)
 	 *			if this is the second station in the highway
 	 *				then
-	 *					if the distance from N to A is less than the distance from A to N
+	 *					if the distance from N to A is less than the distance from A1 to N
 	 *						then 
 	 *							add A as neighbor to N (a flow from N to A).
 	 *						else
-	 *							add N as neighbor to A (a flow from A to N).
+	 *							add N as neighbor to A1 (a flow from A1 to N).
 	 *				else				
-	 *					if the distance from N to A is less than the distance from N to A1
+	 *					if the distance from N to A is less than the distance from A1 to N
 	 *						then 
-	 *							1-add A as neighbor to N (a flow from N to A).
-	 *							2-get the station that leads to A (call it D).
-	 *							3-delete the neighborhood relation from D to A.
+	 *							1-get the station that leads to A (call it D).
+	 * 							2-delete the neighborhood relation from D to A.
+	 *							3-add A as neighbor to N (a flow from N to A).
 	 *							4-add N as neighbor to D (a flow from D to N)
 	 *						else
 	 *							1-get neighbor of A1 (call it D).
-	 *							2-delete the neighborhood relation from A1 to D.
-	 *							3-add N as neighbor to A1 (a flow from A1 to N).
-	 *							4-add D as neighbor to N (a flow from N to D).
-	 *					
+	 * 							2-delete the neighborhood relation from A1 to D.
+	 *							3-add D as neighbor to N (a flow from N to D).
+	 *							4-add N as neighbor to A1 (a flow from A1 to N).
+	 *	remark: Highways are always two way so no need for one way processing.
 	 *					 
 	 *	important remark(B is neighbor to A <=> there is a flow from A to B)
 	 * 
@@ -231,9 +237,10 @@ class Station extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations,$isTwoWay){
+	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations){
 		
 		 //if the new station is not the first one
+		 echo 1000;
 		if($highway){
 			echo 1;
 			//load the neighbor model
@@ -273,9 +280,11 @@ class Station extends CI_Controller {
 				//forming the url to be sent
 				var_dump($origin);
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
+				echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
+				echo $body;
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
 				foreach($decoded->rows[0]->elements as $element){
@@ -288,8 +297,10 @@ class Station extends CI_Controller {
 				
 				//getting the backward(from all the other stations to the new station) distances
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
+				echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
+				echo $body;
 				//decode the json encoded body
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
@@ -299,8 +310,14 @@ class Station extends CI_Controller {
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
+				
+				var_dump($stations);
+				var_dump($distances);
+				var_dump($nearest);
+				var_dump($distances_back);
+				var_dump($nearest_back);
 				//if the highway is bidirectional
-				if($isTwoWay){
+				//if($isTwoWay){
 					echo 3;
 					//if this is the second station to be added to the highway
 					if(count($stations) == 2){
@@ -309,10 +326,10 @@ class Station extends CI_Controller {
 						$this->neighbor_model->station_id = $stations[0]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
 						$this->neighbor_model->distatnce = $distances_back[0];//the backward distance
-						
+						echo 'add against';
 						$this->neighbor_model->addNeighbor();
-						$this->neighbor_model->station_id = $stations[0]['id'];//the new station
-						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the old station
+						$this->neighbor_model->station_id = $stations[1]['id'];//the new station
+						$this->neighbor_model->neighbor_id = $stations[0]['id'];//the old station
 						$this->neighbor_model->distatnce = $distances[0];//the forward distance
 						
 						$this->neighbor_model->addNeighbor();
@@ -372,7 +389,7 @@ class Station extends CI_Controller {
 							$this->neighbor_model->addNeighbor();
 						}
 					}
-				}else{//if the road is one-way
+				/*}else{//if the road is one-way
 					//if this is the second station to be added to the highway
 					if(count($stations) == 2){
 						//if the foreward distance is less than the backward distance
@@ -394,18 +411,12 @@ class Station extends CI_Controller {
 					}else if(count($station > 2)){
 						//if the foreward distance is less than the backward distance then the road flow direction is foreward
 						if($distances[0] < $distances_back[0]){
-							//add the nearest station as a neighbor to the new station
-							$this->neighbor_model->station_id = $station_id;// the new station
-							$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];// the neighbor of the new station
-							$this->neighbor_model->distance = $distances[$nearest];// the foreward distance 
-							
-							$this->neighbor_model->addNeighbor();
-							
+	
 							//get the station that has the nearest station as a neighbor to it
 							$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];
 							
 							$n_neighbor = $this->neighbor_model->getNeighborsByNeighborId();
-							//if the new neighbor isn't a highway terminal
+							//if the new neighbor isn't the end of the highway
 							if(isset($n_neighbor[0])){
 								//modify this neighborhood relationship to become with the new station instead of the nearest station
 								$this->neighbor_model->id = $n_neighbor[0]['id'];
@@ -422,27 +433,28 @@ class Station extends CI_Controller {
 								}
 								if($n_index !== -1){// if the station was found in the stationss array
 									$this->neighbor_model->distance = $distances_back[$n_index];
-									$this->neighbor_model->addNeighbor();
+									$this->neighbor_model->modifyNeighbor();
 								}
 							}
+							//add the nearest station as a neighbor to the new station
+							$this->neighbor_model->station_id = $station_id;// the new station
+							$this->neighbor_model->neighbor_id = $stations[$nearest]['id'];// the neighbor of the new station
+							$this->neighbor_model->distance = $distances[$nearest];// the foreward distance 
+							
+							$this->neighbor_model->addNeighbor();
 						}//the road direction is backward
 						else{
-							//get the neighbor of the nearest station
+							
+							//get the station that is a neighbor to the nearest station
 							$this->neighbor_model->station_id = $stations[$nearest_back]['id'];
 							$n_neighbor = $this->neighbor_model->getNeighborsByStationId();
 							// if this station has neighbors
 							if(isset($n_neighbor[0])){
 								//modify this relationship in the database by replacing the neighbor_id with the new station id
 								$this->neighbor_model->id = $n_neighbor[0]['id'];
-								$this->neighbor_model->station_id = $n_neighbor[0]['station_id'];
-								$this->neighbor_model->neighbor_id = $station_id;
-								$this->neighbor_model->distance = $distances_back[$nearest_back];
-								
-								$this->neighbor_model->modifyNeighbor();
-								
-								//add the nearest's neaibor as a neighbopr to the new station
 								$this->neighbor_model->station_id = $station_id;
 								$this->neighbor_model->neighbor_id = $n_neighbor[0]['neighbor_id'];
+								$n_index = -1;
 								//getting the distance from the new station to the nearest's neighbor
 								for($i=0;$i<count($stations);$i++){
 									if($stations[$i]['id'] ==  $n_neighbor[0]['neighbor_id']){
@@ -450,13 +462,14 @@ class Station extends CI_Controller {
 										break;
 									}
 								}
-								$this->neighbor_model->distance = $distances[$n_index];
-								
-								$this->neighbor_model->addNeighbor();
+								if($n_index !== -1){
+									$this->neighbor_model->distance = $distances[0]['distance'];
+									$this->neighbor_model->modifyNeighbor();
+								}
 								
 							}else{//if this  is a terminal
 								//just add the new station as a neighbor to the nearest station
-								$this->neighbor_model->station_id = $n_neighbor[0]['station_id'];
+								$this->neighbor_model->station_id = $stations[$nearest_back]['id'];
 								$this->neighbor_model->neighbor_id = $station_id;
 								$this->neighbor_model->distance = $distances_back[$nearest_back];
 								
@@ -464,7 +477,7 @@ class Station extends CI_Controller {
 							}
 						}				
 					}
-				}
+				}*/
 			}
 		}	
 	 }
@@ -480,10 +493,12 @@ class Station extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function determineHighwayTerminals($highway,$highway_id,$stations){
+		
 		//load the highway model
 		$this->load->model("highway_model");
 		//if the highway is new then it has only one station 
-		if($highway){
+		if(!$highway){
+			echo " highway NOT exists";
 			//add the station as the first and last stations of the highway
 			//fill model fields
 			$this->highway_model->start_station = $stations[0]['id'];
@@ -492,25 +507,32 @@ class Station extends CI_Controller {
 			
 			$this->highway_model->setHighwayTerminals();
 		}else{
+			echo " highway  exists";
 			 //load the station model
 			$this->load->model('station_model');
+			$this->load->model('highway_model');
 			//if the road is a two way
-			if($highway['two_way']){				
+			$this->highway_model->id = $highway_id;
+			//$isTwoWay = $this->highway_model->isTwoWay();
+			//$isTwoWay = ($isTwoWay['two_way'] == 1)? true : false;
+			//if($isTwoWay){	
+				echo 2;			
 				$this->station_model->highway_id = $highway_id;
 				//get the neighbor count for all the stations in the highway
-				$neighbor_counts = $this->station_model->getHighwayStationsNeighborCount($highway['two_way']);
+				$neighbor_counts = $this->station_model->getTwoWayHighwayStationsNeighborCount();
 				//set the highway id in the highway model
-				$this->highway_model->id = highway_id;
+				$this->highway_model->id = $highway_id;
 				//set the highway terminals in the model
 				//the terminal is a station that has only one neighbor
-				if(count($n_counts) == 2){//We assume that the highway has only two terminals
-						$this->highway_model->start_station = $n_counts[0]['id'];
-						$this->highway_model->end_station = $n_counts[1]['id'];
+				if(count($neighbor_counts) == 2){//We assume that the highway has only two terminals
+						$this->highway_model->start_station = $neighbor_counts[0]['id'];
+						$this->highway_model->end_station = $neighbor_counts[1]['id'];
+						//set the highway terminals
+						$this->highway_model->setHighwayTerminals();
 				}
-				//set the highway terminals
-				$this->highway_model->setHighwayTerminals();
 				
-			}else{//if the road is one way
+			/*}else{//if the road is one way
+				echo 3;
 				$this->load->model('station_model');
 				//set the highway id in the model
 				$this->station_model->highway_id = $highway_id;
@@ -524,13 +546,13 @@ class Station extends CI_Controller {
 					$this->highway_model->start_station = $start_station[0]['id'];
 				}
 				//getting the last station in the highway
-				$neighbor_counts = $this->station_model->getHighwayStationsNeighborCount($highway['two_way']);
+				$neighbor_counts = $this->station_model->getOneWayHighwaylastStation();
 				if(isset($neighbor_counts[0])){//if the last stationwas found
 					$this->highway_model->end_station = $neighbor_counts[0]['id'];
 				}
 				//setting the highway terminals
 				$this->highway_model->setHighwayTerminals();
-			}
+			}*/
 		}
 	}
 	
@@ -559,6 +581,18 @@ class Station extends CI_Controller {
 		//var_dump ($a);
 		//get the highway name froimthe decoded body
 		$highway = $code->results[0]->locations[0]->street;
+		$highway_fragments = explode(' ',$highway);
+		if(is_numeric($highway_fragments[0]) AND count($highway_fragments) > 1){
+			$highway_fragments = array_slice($highway_fragments,1);
+			$highway = $highway_fragments[1];
+			$cont = true;//if this is not the3 first index in the array continue
+			foreach($highway_fragments as $highway_fragment){
+				if($cont){
+					continue;
+				}
+				$highway .= " ".$highway_fragment;
+			}
+		}
 		return $highway;
 	}
 

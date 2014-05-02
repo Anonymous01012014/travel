@@ -202,7 +202,7 @@ class Station_model extends CI_Model{
 	 }
 	 
 	 /**
-	 * function name : getHighwayStationsNeighborCount
+	 * function name : getTwoWayHighwayStationsNeighborCount
 	 * 
 	 * Description : 
 	 * Returns the count of the neighbors of each station in the specified highway.
@@ -213,17 +213,34 @@ class Station_model extends CI_Model{
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
 	 */
-	 public function getHighwayStationsNeighborCount($isTwoWay){
-		 $count = 0;//neighbor count for the last station in a one-way highway  = 0
-		 if($isTwoWay){
-			$count = 1;//neighbor count for a terminal station in a two-way highway  = 0
-		 }
+	 public function getTwoWayHighwayStationsNeighborCount(){
 		$query = "SELECT  station.id as id ,count(neighbor.neighbor_id) as neighbor_count
 				  FROM station INNER JOIN neighbor ON station.id = neighbor.station_id
-				  where station.highway_id={$this->id}
-				  AND neighbor_count = {$count} 
-				  GROUP BY station.id,neighbor.neighbor_id ;";
-				  
+				  where station.highway_id={$this->highway_id}
+				  GROUP BY station.id,neighbor.neighbor_id 
+				  Having count(neighbor.neighbor_id) = 1;";
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 /**
+	 * function name : getOneWayHighwayLastStation
+	 * 
+	 * Description : 
+	 * Returns the last station of a oneway highway
+	 * 
+	 * Created date :29-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 *
+	 public function getOneWayHighwayLastStation(){
+		$query = "SELECT  station.id as id ,count(neighbor.neighbor_id) as neighbor_count
+				  FROM station LEFT JOIN neighbor ON station.id = neighbor.station_id
+				  where station.highway_id={$this->highway_id}
+				  GROUP BY station.id,neighbor.neighbor_id 
+				  Having count(neighbor.neighbor_id) = 0;";
+				  echo $query;
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
@@ -240,17 +257,17 @@ class Station_model extends CI_Model{
 	 * Modfication reason : ---
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
-	 */
+	 *
 	 public function getOneWayHighwayFirstStation(){
 		$query = "SELECT  station.id as id ,count(neighbor.station_id) as neighbor_count
-				  FROM station INNER JOIN neighbor ON station.id = neighbor.neighbor_id
-				  where station.highway_id={$this->id}
-				  AND count(neighbor.station_id) = 0
-				  GROUP BY station.id,neighbor.station_id ;";
-				  
+				  FROM station LEFT JOIN neighbor ON station.id = neighbor.neighbor_id
+				  where station.highway_id={$this->highway_id}
+				  GROUP BY station.id,neighbor.station_id 
+				  Having count(neighbor.neighbor_id) = 0;";
+				  echo $query;
 		$query = $this->db->query($query);
 		return $query->result_array();
-	 }
+	 }*/
 	 
 	 /**
 	 * function name : getStationsWithOneNeighbor

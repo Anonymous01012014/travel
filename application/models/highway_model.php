@@ -32,7 +32,7 @@ class Highway_model extends CI_Model{
 	var $end_station = 0;
 	
 	//A flag that indicates if this higthway is bidirectional
-	var $two_way = "";
+	//var $two_way = "";
 	
 	
 	/**
@@ -66,15 +66,13 @@ class Highway_model extends CI_Model{
 							name,
 							type,
 							start_station,
-							end_station,
-							two_way
+							end_station
 						) 
 						VALUES (
 							'{$this->name}',
 							'{$this->type}',
 							'{$this->start_station}',
-							'{$this->end_station}',
-							'{$this->two_way}'
+							'{$this->end_station}'
 						);
 					";
 		$this->db->query($query);
@@ -118,8 +116,7 @@ class Highway_model extends CI_Model{
 					name = '{$this->name}',
 					type = {$this->type},
 					start_station = {$this->start_station},
-					end_station = {$this->end_station},
-					two_way = {$this->two_way}		
+					end_station = {$this->end_station}		
 	 			  WHERE id = {$this->id}";
 		$this->db->query($query);
 		return true;
@@ -185,7 +182,7 @@ class Highway_model extends CI_Model{
 	 public function getHighwayByName(){
 		$query = "SELECT  *
 				  FROM highway
-				  where name='{$this->name}'";
+				  where name like '{$this->name}'";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
@@ -202,13 +199,14 @@ class Highway_model extends CI_Model{
 	 * Modfication reason : ---
 	 * Author : Ahmad Mulhem Barakat
 	 * contact : molham225@gmail.com
-	 */
+	 *
 	 public function isTwoWay(){
 		$query = "SELECT two_way 
 				  FROM highway
 				  WHERE id = {$this->id}";
 				  
 		$query = $this->db->query($query);
-		return $query->result_array();
-	 }
+		$result =  $query->result_array();
+		return $result[0];
+	 }*/
 }
