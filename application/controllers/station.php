@@ -310,7 +310,6 @@ class Station extends CI_Controller {
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
-				
 				var_dump($stations);
 				var_dump($distances);
 				var_dump($nearest);
@@ -325,12 +324,13 @@ class Station extends CI_Controller {
 						//add each of the stations as a neighbor to the other one
 						$this->neighbor_model->station_id = $stations[0]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
-						$this->neighbor_model->distatnce = $distances_back[0];//the backward distance
-						echo 'add against';
+						$this->neighbor_model->distance = $this->getDistance($distances,$distances_back,0);
+						
 						$this->neighbor_model->addNeighbor();
+						
 						$this->neighbor_model->station_id = $stations[1]['id'];//the new station
 						$this->neighbor_model->neighbor_id = $stations[0]['id'];//the old station
-						$this->neighbor_model->distatnce = $distances[0];//the forward distance
+						$this->neighbor_model->distance = $this->getDistance($distances,$distances_back,0);
 						
 						$this->neighbor_model->addNeighbor();
 					}else if(count($stations) > 2){
@@ -349,12 +349,12 @@ class Station extends CI_Controller {
 							$n_index = -1;
 							for($i=0;$i<count($distances);$i++){
 								if($stations[$i]['id'] == $n_neighbor['neighbor_id']){
-									$distance = $distances[$i];
+									$distance = $this->getDistance($distances,$distances_back,$i);;
 									$n_index = $i;
 									break;
 								}
 							}
-							//if the nearst's neighbor's distance from the new station is less than its distatnce 
+							//if the nearst's neighbor's distance from the new station is less than its distance 
 							//from the nearest delete this station from the nearest's neighbors and add it as a 
 							//neighbor to the new station
 							if($distance < $n_neighbor['distance']){
@@ -378,14 +378,14 @@ class Station extends CI_Controller {
 							//add each of the stations as a neighbor to the other one
 							$this->neighbor_model->station_id = $stations[$neighbor]['id'];//the old station
 							$this->neighbor_model->neighbor_id = $station_id;//the new station
-							$this->neighbor_model->distatnce = $distances_back[$neighbor];//the backward distance
-							
+							$this->neighbor_model->distance = $this->getDistance($distances,$distances_back,$neighbor);
+														
 							$this->neighbor_model->addNeighbor();
 							
 							$this->neighbor_model->station_id = $station_id;//the new station
 							$this->neighbor_model->neighbor_id = $stations[$neighbor]['id'];//the old station
-							$this->neighbor_model->distatnce = $distances[$neighbor];//the forward distance
-							
+							$this->neighbor_model->distance = $this->getDistance($distances,$distances_back,$neighbor);
+														
 							$this->neighbor_model->addNeighbor();
 						}
 					}
@@ -563,37 +563,52 @@ class Station extends CI_Controller {
 	 * This function finds out the high way in the given GPS long and lat.
 	 * 
 	 * created date: 25-04-2014 
-	 * ccreated by: Eng. Ahmad Mulhem Barakat
+	 * created by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
 	public function findoutHighway($long,$lat){
 		//load curl_helper
 		$this->load->helper("curl");
 		//forming the revrse geocoding service url to be used to get the highway name
-		$url = "http://www.mapquestapi.com/geocoding/v1/reverse?key=Fmjtd%7Cluur2q0z2l%2Cr2%3Do5-9ab250&callback=renderReverse&location={$lat},{$long}";        
+		//$url = "http://www.mapquestapi.com/geocoding/v1/reverse?key=Fmjtd%7Cluur2q0z2l%2Cr2%3Do5-9ab250&callback=renderReverse&location={$lat},{$long}";        
+		$url = "http://api.geonames.org/findNearbyStreetsOSMJSON?formatted=true&lat={$lat}&lng={$long}&username=ecobuild&style=full";
 		//get the body of the request result
 		$body = send_request($url);
 		//decode it from json format
 		
 		
-		$body = substr($body, 14, -1); 
+		//$body = substr($body, 14, -1); 
 		$code = json_decode($body);
 		//var_dump ($a);
 		//get the highway name froimthe decoded body
-		$highway = $code->results[0]->locations[0]->street;
-		$highway_fragments = explode(' ',$highway);
-		if(is_numeric($highway_fragments[0]) AND count($highway_fragments) > 1){
+		//$highway = $code->results[0]->locations[0]->street;
+		if(isset($code->streetSegment->ref)){
+			$highway = $code->streetSegment->ref;
+		}else if(isset($code->streetSegment[0]->ref)){
+			$highway = $code->streetSegment[0]->ref;
+		}else if(isset($code->streetSegment->name)){
+			$highway = $code->streetSegment->name;
+		}else if(isset($code->streetSegment[0]->name)){
+			$highway = $code->streetSegment[0]->name;
+		}
+		$highway_fragments = explode(';',$highway);
+		/*if(is_numeric($highway_fragments[0]) AND count($highway_fragments) > 1){
 			$highway_fragments = array_slice($highway_fragments,1);
-			$highway = $highway_fragments[1];
+			var_dump($highway_fragments);
+			$highway = $highway_fragments[0];
+			echo $highway;
 			$cont = true;//if this is not the3 first index in the array continue
 			foreach($highway_fragments as $highway_fragment){
 				if($cont){
+					$cont = false;
 					continue;
 				}
 				$highway .= " ".$highway_fragment;
 			}
 		}
-		return $highway;
+		* */
+		
+		return $highway_fragments[count($highway_fragments) - 1];
 	}
 
 	/**
@@ -716,6 +731,25 @@ class Station extends CI_Controller {
 		$this->travel_model->travel_time=strtotime($date2) - strtotime($date1);	
 		$this->travel_model->is_valid=true;	
 		$this->travel_model->addTravel();
+	}
+	
+	/**
+	 * Function name : getDistance
+	 * 
+	 * Description: 
+	 * This function returns the shorter distance from the given index in thwe two given distance array.
+	 * 
+	 * created date: 03-05-2014 
+	 * created by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
+	
+	public function getDistance($foreward_distances,$backward_distances,$index){
+		if($foreward_distances[$index] >= $backward_distances[$index]){
+			return $backward_distances[$index];
+		}else{
+			return $foreward_distances[$index];
+		}
 	}
 	/* End of file welcome.php */
 	/* Location: ./application/controllers/welcome.php */

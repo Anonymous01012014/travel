@@ -217,7 +217,7 @@ class Station_model extends CI_Model{
 		$query = "SELECT  station.id as id ,count(neighbor.neighbor_id) as neighbor_count
 				  FROM station INNER JOIN neighbor ON station.id = neighbor.station_id
 				  where station.highway_id={$this->highway_id}
-				  GROUP BY station.id,neighbor.neighbor_id 
+				  GROUP BY station.id 
 				  Having count(neighbor.neighbor_id) = 1;";
 		$query = $this->db->query($query);
 		return $query->result_array();
