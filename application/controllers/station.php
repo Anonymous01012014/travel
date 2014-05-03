@@ -65,7 +65,7 @@ class Station extends CI_Controller {
 			//if not add it
 			newStation($station_ID,$long,$lat);
 		}
-		//if this is n new passing
+		//if this is a new passing
 		$this->newPass($station_id,$mac,$passing_time);
 	}
 	
@@ -240,9 +240,9 @@ class Station extends CI_Controller {
 	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations){
 		
 		 //if the new station is not the first one
-		 echo 1000;
+		 //echo 1000;
 		if($highway){
-			echo 1;
+			//echo 1;
 			//load the neighbor model
 			$this->load->model("neighbor_model");	
 			//prepare the neighbors array which is an array of the indeces of the neighbors in the stations array
@@ -258,20 +258,20 @@ class Station extends CI_Controller {
 				if($station['id'] == $station_id){
 					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
-					echo $order."/n";
+					//echo $order."/n";
 				}else{
 					if($destinations == "")
 						$destinations = $station['latitude'].",".$station['longitude'];
 					else
 						$destinations .= "|".$station['latitude'].",".$station['longitude'];
 					$order++;
-					echo $order."/n";
+					//echo $order."/n";
 				}
 				
 			}
 			//if there is more than one station in the highway
 			if($destinations !== ""){
-				echo 2;
+				//echo 2;
 				//prepare distances arrays
 				$distances = array();//forward distances (from the new station to the other stations)
 				$distances_back = array();//backward distances (from the other stations to the new station)
@@ -280,11 +280,11 @@ class Station extends CI_Controller {
 				//forming the url to be sent
 				var_dump($origin);
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				echo $url;
+				//echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
-				echo $body;
+				//echo $body;
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
 				foreach($decoded->rows[0]->elements as $element){
@@ -297,10 +297,10 @@ class Station extends CI_Controller {
 				
 				//getting the backward(from all the other stations to the new station) distances
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				echo $url;
+				//echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
-				echo $body;
+				//echo $body;
 				//decode the json encoded body
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
@@ -310,17 +310,17 @@ class Station extends CI_Controller {
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
-				var_dump($stations);
+				/*var_dump($stations);
 				var_dump($distances);
 				var_dump($nearest);
 				var_dump($distances_back);
-				var_dump($nearest_back);
+				var_dump($nearest_back);*/
 				//if the highway is bidirectional
 				//if($isTwoWay){
-					echo 3;
+					//echo 3;
 					//if this is the second station to be added to the highway
 					if(count($stations) == 2){
-						echo 4;
+						//echo 4;
 						//add each of the stations as a neighbor to the other one
 						$this->neighbor_model->station_id = $stations[0]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $stations[1]['id'];//the new station
@@ -334,7 +334,7 @@ class Station extends CI_Controller {
 						
 						$this->neighbor_model->addNeighbor();
 					}else if(count($stations) > 2){
-						echo 5;
+						//echo 5;
 						//We consider that the nearest station is a neighbor
 						$neighbors[] = $nearest; 
 						//get the neighbors of the nearest station
@@ -349,7 +349,7 @@ class Station extends CI_Controller {
 							$n_index = -1;
 							for($i=0;$i<count($distances);$i++){
 								if($stations[$i]['id'] == $n_neighbor['neighbor_id']){
-									$distance = $this->getDistance($distances,$distances_back,$i);;
+									$distance = $this->getDistance($distances,$distances_back,$i);
 									$n_index = $i;
 									break;
 								}
@@ -498,7 +498,7 @@ class Station extends CI_Controller {
 		$this->load->model("highway_model");
 		//if the highway is new then it has only one station 
 		if(!$highway){
-			echo " highway NOT exists";
+			//echo " highway NOT exists";
 			//add the station as the first and last stations of the highway
 			//fill model fields
 			$this->highway_model->start_station = $stations[0]['id'];
@@ -507,7 +507,7 @@ class Station extends CI_Controller {
 			
 			$this->highway_model->setHighwayTerminals();
 		}else{
-			echo " highway  exists";
+			//echo " highway  exists";
 			 //load the station model
 			$this->load->model('station_model');
 			$this->load->model('highway_model');
@@ -516,7 +516,7 @@ class Station extends CI_Controller {
 			//$isTwoWay = $this->highway_model->isTwoWay();
 			//$isTwoWay = ($isTwoWay['two_way'] == 1)? true : false;
 			//if($isTwoWay){	
-				echo 2;			
+				//echo 2;			
 				$this->station_model->highway_id = $highway_id;
 				//get the neighbor count for all the stations in the highway
 				$neighbor_counts = $this->station_model->getTwoWayHighwayStationsNeighborCount();
@@ -623,36 +623,46 @@ class Station extends CI_Controller {
 	 */
 	public function newPass($station_id,$mac,$passing_time)
 	{
+		$passing_time = urldecode($passing_time);
 		//loading  passing model
 		$this->load->model("passing_model");
-		//check if this traveller exists in the database
-		$traveller = $this->checkTraveller($mac);
-		if(!$traveller){
-			//adding new traveller if not existed or get the mac record id 
-			$traveller_id =$this->addTraveller($mac);
-			
-			//prepare fields to add a new pass
-			$this->passing_model->passing_time=$passing_time;
-			$this->passing_model->traveller_id=$traveller_id;
-			$this->passing_model->station_id=$station_id;
-			$pass_to=$this->passing_model->addPassing();
-		}else{
-			$traveller_id = $traveller['id'];
-			//get the last passing for this station 
-			$this->passing_model->station_id=$station_id;
-			$pass_from=$this->passing_model->getLastStationPassing();
-			
-			//prepare fields to add a new pass
-			$this->passing_model->passing_time=$passing_time;
-			$this->passing_model->traveller_id=$traveller_id;
-			$this->passing_model->station_id=$station_id;
-			$pass_to=$this->passing_model->addPassing();
-			
-			//determine if we should add new travel
-			if(count($pass_from)>0)
-			{
-				//new travel should be added
-				$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
+		//getting the station from the database
+		$this->load->model("station_model");
+		
+		$this->station_model->station_ID = $station_id;
+		
+		$station = $this->station_model->getStationByStationID();
+		//if the station exists in the database
+		if(isset($station[0])){
+			//check if this traveller exists in the database
+			$traveller = $this->checkTraveller($mac);
+			if(!$traveller){
+				//adding new traveller if not existed or get the mac record id 
+				$traveller_id =$this->addTraveller($mac);
+				
+				//prepare fields to add a new pass
+				$this->passing_model->passing_time=$passing_time;
+				$this->passing_model->traveller_id=$traveller_id;
+				$this->passing_model->station_id=$station[0]['id'];
+				$pass_to=$this->passing_model->addPassing();
+			}else{
+				$traveller_id = $traveller['id'];
+				//get the last passing for this station 
+				$this->passing_model->station_id=$station_id;
+				$pass_from=$this->passing_model->getLastStationPassing();
+				
+				//prepare fields to add a new pass
+				$this->passing_model->passing_time=$passing_time;
+				$this->passing_model->traveller_id=$traveller_id;
+				$this->passing_model->station_id=$station[0]['id'];
+				$pass_to=$this->passing_model->addPassing();
+				
+				//determine if we should add new travel
+				if(count($pass_from)>0)
+				{
+					//new travel should be added
+					$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
+				}
 			}
 		}
 	}
@@ -718,7 +728,11 @@ class Station extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
 	 */
-	 
+	 /*
+	  * $to_time = strtotime("2008-12-13 10:42:00");
+$from_time = strtotime("2008-12-13 10:21:00");
+echo round(abs($to_time - $from_time) / 60,2). " minute";
+	  * */
 	public function addTravel($pass_from,$pass_to,$date1,$date2)
 	{
 		//loading  travel model

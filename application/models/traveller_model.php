@@ -63,13 +63,13 @@ class Traveller_model extends CI_Model{
 							vehicle_type
 						) 
 						VALUES (
-							'{$this->name}',
+							'{$this->mac_address}',
 							'{$this->device_type}',
 							'{$this->vehicle_type}'
 						);
 					";
 		$this->db->query($query);
-		return $this-db->insert_id();
+		return $this->db->insert_id();
 	 }
 	 
 	 /**
@@ -107,8 +107,8 @@ class Traveller_model extends CI_Model{
 		$query = "UPDATE traveller
 				  SET
 					mac_address = {$this->mac_address},
-							device_type = {$this->device_type},
-							vehicle_type = {$this->vehicle_type}		
+					device_type = {$this->device_type},
+					vehicle_type = {$this->vehicle_type}		
 	 			  WHERE id = {$this->id}";
 		$this->db->query($query);
 		return true;
@@ -148,7 +148,7 @@ class Traveller_model extends CI_Model{
 	 public function getTravellerByMac(){
 		$query = "SELECT id 
 				  FROM traveller
-				  where mac_address={$this->mac_address}";
+				  where mac_address like '{$this->mac_address}'";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
