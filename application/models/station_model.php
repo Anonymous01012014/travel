@@ -93,6 +93,34 @@ class Station_model extends CI_Model{
 		return $this->db->insert_id();
 	 }
 	 
+    /**
+	 * function name : startStation
+	 * 
+	 * Description : 
+	 * add new station to the database.
+	 * 
+	 * parameters:
+	 * 	
+	 * Created date : 04-05-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function startStation(){
+		$query = "UPDATE station
+				  SET
+					station_ID = {$this->station_ID},
+					longitude = {$this->longitude},
+					latitude = {$this->latitude},
+					status = {$this->status},		
+					start_date = CAST(GETDATE() AS DATE),		
+					highway_id = {$this->highway_id}		
+	 			  WHERE id = {$this->id}";
+		$this->db->query($query);
+		return true;
+	 }
+	 
 	 /**
 	 * function name : deleteStation
 	 * 

@@ -178,7 +178,7 @@ class Passing_model extends CI_Model{
 	 }
 	 
 	 /**
-	 * function name : getLastStationPassing
+	 * function name : getLastTravellerPassing
 	 * 
 	 * Description : 
 	 * Returns the last passing for a station in the database.
@@ -189,10 +189,10 @@ class Passing_model extends CI_Model{
 	 * Author : Ahmad Mulhem Barakat*
 	 * contact : molham225@gmail.com
 	 */
-	 public function getLastStationPassing(){
-		$query = "SELECT MAX(id) AS id ,passing_time FROM passing
-				  where station_id={$this->station_id}
-				  Group By passing_time";
+	 public function getLastTravellerPassing(){
+		$query = "SELECT top 1 id AS id ,passing_time FROM passing
+				  where traveller_id = {$this->traveller_id}
+				  Order By id desc";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

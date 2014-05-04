@@ -73,6 +73,7 @@ class Travel_model extends CI_Model{
 							'{$this->passing_to}'
 						);
 					";
+					echo $query;
 		$this->db->query($query);
 		return $this->db->insert_id();
 	 }
@@ -117,6 +118,7 @@ class Travel_model extends CI_Model{
 							passing_to = {$this->passing_to}
 									
 	 			  WHERE id = {$this->id}";
+	 			  
 		$this->db->query($query);
 		return true;
 	 }
