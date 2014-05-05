@@ -171,7 +171,7 @@ class Highway_model extends CI_Model{
 	 * function name : getHighwayByName
 	 * 
 	 * Description : 
-	 * Returns the Highway stations in the database.
+	 * Returns the Highway determined by the given name.
 	 * 
 	 * Created date : 26-04-2014
 	 * Modification date : ---
@@ -183,6 +183,27 @@ class Highway_model extends CI_Model{
 		$query = "SELECT  *
 				  FROM highway
 				  where name like '{$this->name}'";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 /**
+	 * function name : getHighwayById
+	 * 
+	 * Description : 
+	 * Returns the Highway determined by the given id.
+	 * 
+	 * Created date : 26-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getHighwayById(){
+		$query = "SELECT  *
+				  FROM highway
+				  where id = {$this->id}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

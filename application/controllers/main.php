@@ -1,16 +1,18 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 	/**
-	 * Filename: message.php
+	 * Filename: main.php
 	 * Description: 
-	 * This class is used for nmessage controlling(recieve message,parse message)
+	 * This class is the main class for handling message driven commands.
+	 * It receives the message coming from the websocket server and parses it.
+	 * then it executes controlling processes depending on the parsing result of these messages.
 	 * 
 	 *  
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-class Message extends CI_Controller {
+class Main extends CI_Controller {
 	// The message received from the station
 	var $message = "";
 	
@@ -60,15 +62,15 @@ class Message extends CI_Controller {
 	public function parseMessage(){
 		//parse message
 		//check if the station exists in the datbase
-		if(/*New station*/){
+		//if(/*New station*/){
 			
 			newStation($station_ID,$long,$lat);
-		}else{
+		//}else{
 			if(checkStation($station_ID)){
-				if(/* this is a new passing*/)
-					$this->newPass($station_id,$mac,$passing_time);
+				//if(/* this is a new passing*/)
+					//$this->newPass($station_id,$mac,$passing_time);
 			}
-		}
+		//}
 	}
 	
 	/* Station Section*/
@@ -132,7 +134,7 @@ class Message extends CI_Controller {
 			$highway_id = $highway['id']; 
 		}
 		//filling the model fields
-		$station_id = $this->station['id']
+		$station_id = $this->station['id'];
 		$this->station_model->id = $station_id;
 		$this->station_model->station_ID = $station_ID;
 		$this->station_model->longitude = $long;
@@ -612,7 +614,7 @@ class Message extends CI_Controller {
 	/* End of Travel Section*/
 	
 	
-	/* End of file welcome.php */
-	/* Location: ./application/controllers/welcome.php */
+	/* End of file message.php */
+	/* Location: ./application/controllers/message.php */
 }
 

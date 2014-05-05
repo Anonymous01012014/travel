@@ -64,15 +64,15 @@
 			if($from->authenticated){
 				//get the satation_ID from the message
 				//check this station existence in the database
-				$station_exists = shell_exec("php index.php message checkStation ".$station_ID);
+				$station_exists = shell_exec("php index.php main checkStation ".$station_ID);
 				if($station_exists){
 					$from->authenticated = true;
 					$numRecv = count($this->clients) - 1;
 				
-				echo sprintf('Connection %d sending message "%s"\n'
+				echo sprintf('Connection %d sending main "%s"\n'
 					, $from->resourceId, $msg);
 					//send the message to the station controller to be parsed
-					$result = shell_exec("php index.php message receive_message ".$msg);
+					$result = shell_exec("php index.php main receive_message ".$msg);
 					//send the result back to the station
 					$from->send($result);
 				}else{
