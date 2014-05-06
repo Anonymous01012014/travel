@@ -1,24 +1,60 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Welcome extends CI_Controller {
+class dashboard extends CI_Controller {
 
 	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -  
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in 
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see http://codeigniter.com/user_guide/general/urls.html
+	 * dashboard controller to show interface with map and options to show travel time parameters
 	 */
-	public function index($highway_id)
+	 
+	 
+	 
+	/**
+	 * Function name : index
+	 * Description: 
+	 * show the main interface of travel time
+	 * 
+	 * created date: 5-5-2014
+	 * ccreated by: Eng. Mohanad Shab Kaleia
+	 * contact: ms.kaleia@gmail.com 
+	 */ 
+	public function index()
 	{
+		
+		//load highways
+		$this->load->model("highway_model");
+		$highways = $this->highway_model->getAllHighways();								
+		$data["highways"] = $highways;
+		
+		//set the active menu
+		$data["active_menu"] = "dashboard";
+		
+		//call the general views for page structure	
+		$this->load->view('gen/header');
+		$this->load->view('gen/main_menu' , $data);
+		$this->load->view('gen/logo');
+		$this->load->view('gen/main_content');
+	
+		//load the map view
+		$this->load->view("travel_map" , $data);
+		
+		
+		$this->load->view('gen/footer');
+	}
+	
+	
+	/**
+	 * Function name : ajaxGetTravelTimeByHighway
+	 * Description: 
+	 * get travel times by highway
+	 * 
+	 * created date: 5-5-2014
+	 * ccreated by: Eng. Ahmad Molham Barakat
+	 * contact: molham255@gmail.com
+	 */ 
+	public function ajaxGetTravelTimeByHighway()
+	{
+		$highway_id = $this->input->post("highway_id");
+		
 		//loading required models
 		$this->load->model("highway_model");
 		$this->load->model("station_model");
@@ -137,8 +173,9 @@ class Welcome extends CI_Controller {
 		$result[] = $highway_stations;
 		$result[] = $travel_times_back;
 		
-		echo json_encode($result);		
+		echo json_encode($result);	
 	}
+	
 }
 
 /* End of file welcome.php */

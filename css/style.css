@@ -1,0 +1,329 @@
+/** 
+file name: style.css
+created date: 11-2-2014
+created by: Eng. Mohanad Shab Kaleia
+Description:
+this style sheet is for tcms project
+ **/
+ 
+ 
+ 
+*
+{
+        margin:0;
+        padding:0;        
+}
+
+
+h1{font-size:36px;}
+
+a
+{
+	text-decoration: none;	
+	color:white;
+}
+
+a:hover
+{
+	color:#fbddbb;
+}
+
+html, body { height: 100%; width: 100%; margin: 0; }
+
+body
+{
+        background-color:#b9b9b9;
+        
+        background-image: url("../images/bg.jpg");
+        background-repeat:no-repeat;
+        background-attachment:fixed;
+        background-position:top center;  
+        background-size:100% 100%;
+       
+        overflow-x: hidden;    
+        padding-top:50px;
+        min-height: 800px;
+}
+
+
+#main-menu
+{
+	height:50px;
+	margin:0 auto;
+	width:100%;	
+	background-color:#555555;
+	
+	color:white;	
+	position: fixed;
+	top:0px;
+	z-index: 100;
+	
+}
+
+
+#main-menu ul
+{
+	padding-top:18px;
+}
+
+#main-menu ul li
+{
+	float:left;
+	font-size:19px;
+	margin-right:15px;
+	font-family:ubuntu;
+}
+
+#main-menu ul li .active
+{
+	color:#fbddbb;
+
+}
+
+
+#logo
+{
+	margin-top:20px;
+	font-family:ubuntu;
+}
+
+#logo h1
+{
+	color:#555555;
+	font-size:36px;
+}
+
+#logo span
+{
+	font-weight:bold;
+}
+
+#main-content
+{
+	
+	
+}
+
+#log
+{
+	margin-top:25px;
+	min-height:650px;
+	background-color:#555555;
+	opacity:0.8;
+	filter:alpha(opacity=80); /* For IE8 and earlier */
+	border-top:10px solid #000000;
+}
+
+#log h2.log-title
+{
+	color:white;
+	font-size: 36px;
+	margin-top:15px;
+	font-family: ubuntu;
+	
+	
+}
+
+#log ul
+{
+	margin-top:15px;
+}
+
+#log ul li
+{
+	color:white;
+	border-bottom:1px dotted white;
+	margin:5px;
+	margin-bottom:15px;
+	padding-bottom:10px;	
+}
+
+.flat-button
+{
+	height:100px;
+	width:250px;
+	background-color:#555555;
+	opacity:0.8;
+	filter:alpha(opacity=80); /* For IE8 and earlier */
+	margin-right:25px;	
+	margin-bottom:25px;
+	color:white;
+	font-family:ubuntu;
+}
+
+.flat-button img
+{
+	float:right;
+	margin-top:25px;
+	max-width:50px;
+}
+
+.flat-button p
+{
+	font-size:24px;
+	margin-top:35px;
+	float:left;
+}
+
+
+.flat-button:hover
+{
+	border-left:10px solid #ffffff;
+	background-color:#ffffff;	
+	color:#555555;
+	cursor: pointer;
+}
+
+.flat-button.blue
+{
+	border-left:10px solid #3eacd4;
+}
+
+
+.flat-button.green
+{
+	border-left:10px solid #75b167;
+}
+
+.flat-button.red
+{
+	border-left:10px solid #ff7373;
+}
+
+.flat-button.gray
+{
+	border-left:10px solid #555555
+}
+
+.flat-button.orange
+{
+	border-left:10px solid #f0ad4e;
+}
+
+.flat-button a
+{
+	width:100%;
+	height:100%;	
+}
+
+#manage-buttons
+{
+	margin-top:25px;
+	height:100%;
+	margin-left:50px;
+}
+
+#about-section
+{
+	width:250px;
+	background-color:#DFDFDF;
+	opacity:0.8;
+	filter:alpha(opacity=80); /* For IE8 and earlier */
+	padding:10px;	
+}
+
+#about-section h3.title
+{
+	color:#555555;
+	font-size: 24px;
+	margin-top:15px;
+	font-family: ubuntu;
+	margin-bottom:15px;	
+}
+
+#about-section p
+{
+	line-height: 200%;
+	font-size:16px;
+	font-family: ubuntu;
+}
+
+
+#container
+{
+	min-height: 400px;
+	margin-top:25px;
+	margin-bottom:50px;
+	background-color: white;	
+	padding:10px;
+	padding-bottom:20px;
+	opacity:0.9;
+	filter:alpha(opacity=90); /* For IE8 and earlier */
+	-moz-box-shadow:    -1px 1px 1px 1px #ccc;
+         -webkit-box-shadow: -1px 1px 1px 1px #ccc;
+        box-shadow:         -1px 1px 1px 1px #ccc;
+}
+
+#container h1.title
+{
+	color:#555555;
+	font-size: 36px;
+	margin-top:15px;
+	font-family: ubuntu;	
+}
+
+#container p
+{
+	line-height: 200%;
+	font-size:16px;
+	font-family: ubuntu;
+}
+
+/**
+ * Changes added by Molham
+ **/
+
+/* Error validation div */
+div#error{
+	width: 100%;
+	color: red;
+}
+
+/* Table of addition form inputs */
+
+table
+{
+	width:100%;
+}
+
+table tr td
+{
+	padding:10px;
+	vertical-align: top;
+}
+
+input[type=text] , select , input[type=password] , textarea
+{	
+	padding:5px;
+}
+
+input[type=text] , select , input[type=password]{
+	max-width:100%;
+}
+
+textarea
+{
+	width:100%;
+	height:100px;
+}
+
+/* Login form styles */
+form#login label#username,form#login label#password{
+	width:100px;
+	margin-left: 30px;
+}
+
+button#btn_login{
+	float: left;
+	margin-top: 30px;
+	margin-left: 30px;
+}
+
+
+
+#parameters
+{
+	border-left:1px dotted gray;
+	height:500px;
+	padding:10px;
+}
