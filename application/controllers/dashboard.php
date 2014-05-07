@@ -1,10 +1,60 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Welcome extends CI_Controller {
+class dashboard extends CI_Controller {
 
-	
-	public function index($highway_id)
+	/**
+	 * dashboard controller to show interface with map and options to show travel time parameters
+	 */
+	 
+	 
+	 
+	/**
+	 * Function name : index
+	 * Description: 
+	 * show the main interface of travel time
+	 * 
+	 * created date: 5-5-2014
+	 * ccreated by: Eng. Mohanad Shab Kaleia
+	 * contact: ms.kaleia@gmail.com 
+	 */ 
+	public function index()
 	{
+		
+		//load highways
+		$this->load->model("highway_model");
+		$highways = $this->highway_model->getAllHighways();								
+		$data["highways"] = $highways;
+		
+		//set the active menu
+		$data["active_menu"] = "dashboard";
+		
+		//call the general views for page structure	
+		$this->load->view('gen/header');
+		$this->load->view('gen/main_menu' , $data);
+		$this->load->view('gen/logo');
+		$this->load->view('gen/main_content');
+	
+		//load the map view
+		$this->load->view("travel_map" , $data);
+		
+		
+		$this->load->view('gen/footer');
+	}
+	
+	
+	/**
+	 * Function name : ajaxGetTravelTimeByHighway
+	 * Description: 
+	 * get travel times by highway
+	 * 
+	 * created date: 5-5-2014
+	 * ccreated by: Eng. Ahmad Molham Barakat
+	 * contact: molham255@gmail.com
+	 */ 
+	public function ajaxGetTravelTimeByHighway()
+	{
+		$highway_id = $this->input->post("highway_id");
+		
 		//loading required models
 		$this->load->model("highway_model");
 		$this->load->model("station_model");
@@ -13,7 +63,7 @@ class Welcome extends CI_Controller {
 		$this->load->model("views_model");
 		//foreward (from start to end )travel times
 		$travel_times = array();
-		//backward (from end to start )travel times
+		//foreward (from start to end )travel times
 		$travel_times_back = array();
 		//highway travel time in foreward direction
 		$highway_travel_time = 0;
@@ -123,8 +173,9 @@ class Welcome extends CI_Controller {
 		$result[] = $highway_stations;
 		$result[] = $travel_times_back;
 		
-		echo json_encode($result);		
+		echo json_encode($result);	
 	}
+	
 }
 
 /* End of file welcome.php */

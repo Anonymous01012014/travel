@@ -1,0 +1,139 @@
+/* ----------------------------------------------------------------------------------------------------------
+
+    Output device: screen, projection
+
+    Author:     Mohanad Shab Kaleia
+    email : 	m.kaleia@computech-sy.com
+    Update:     2013-02-26, 16:05 GMT+1
+    Version:    1.0.0
+    Copyright : CompuTech Group , www.computech-sy.com , contact@computech-sy.com
+    Structure:
+        display; position; z-index; float; clear; width; height; overflow; margin; padding; border; background; align; font;
+
+---------------------------------------------------------------------------------------------------------- */
+
+
+.grid
+{
+	overflow:auto;
+	background-color:white;	
+}
+
+
+.grid table
+{	
+	width:100%;	
+	margin:0 auto;
+	border: 1px solid #ddd;
+	background-color:#ffffff;			
+}
+
+
+.grid th
+{
+	min-width: 50px;	 	        
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0, #fff), color-stop(1, #e4e4e4));
+    background: -webkit-linear-gradient(top, #fff 0%, #e4e4e4 100%);
+    background: -moz-linear-gradient(top, #fff 0%, #e4e4e4 100%);
+    background: -o-linear-gradient(top, #fff 0%, #e4e4e4 100%);
+    background: -ms-linear-gradient(top, #fff 0%, #e4e4e4 100%);
+    background: linear-gradient(top, #fff 0%, #e4e4e4 100%);   
+    font-size:smaller;
+    font-family:"ubuntu" , "times new roman" , "arial";
+    font-size:16px;           
+}
+
+.grid td
+{
+	border-right: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+	padding:15px;
+	font-size:16px;	
+	white-space: normal;  	  	
+}
+
+.grid td.func
+{
+	width:15px;
+}
+
+.grid td.middle
+{	
+	text-align: center;
+}
+
+.grid tr
+{
+	height:1em;
+}
+
+.grid tr:hover
+{
+	background-color: #eee;
+}
+
+.grid-search
+{
+	margin-bottom:0px;
+	padding:0px;	
+	margin-right:-70px;
+	margin-left:30px;
+}
+
+.grid-search input#search
+{	
+	
+}
+
+.pagination
+{
+	margin-top:0px;
+	margin-bottom:0px;
+	padding:0;
+	height:30px;	
+}
+.well
+{
+
+			
+}
+
+.grid-pagination
+{
+	font-size:small;
+	color:gray;
+}
+
+.grid-pagination input#page_number
+{
+	width: 50px;
+	text-align: center;
+	border-width:1px;
+	border-style:solid;
+	border-color:#DDD;
+	border-left-style:none;
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0px;
+	color:#08C;
+	float:right;
+	position: relative;
+	top:-1px;
+}
+
+ul.grid-pagination li a 
+{
+	cursor: pointer;
+}
+
+#grid_bar
+{	
+	overflow: hidden;	
+}

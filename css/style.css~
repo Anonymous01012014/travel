@@ -1,0 +1,26 @@
+/** 
+file name: style.css
+created date: 11-2-2014
+created by: Eng. Mohanad Shab Kaleia
+Description:
+this style sheet is for tcms project
+ **/
+ 
+ 
+ 
+*
+{
+        margin:0;
+        padding:0;
+}
+
+body
+{
+        background-color:#FEFEFE;
+        background-image: url("./images/bg.jpg");
+        background-repeat:no-repeat;
+        background-attachment:fixed;
+        background-position:top center;  
+        background-size:100% 100%;    
+}
+
