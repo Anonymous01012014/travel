@@ -2,21 +2,7 @@
 
 class Welcome extends CI_Controller {
 
-	/**
-	 * Index Page for this controller.
-	 *
-	 * Maps to the following URL
-	 * 		http://example.com/index.php/welcome
-	 *	- or -  
-	 * 		http://example.com/index.php/welcome/index
-	 *	- or -
-	 * Since this controller is set as the default controller in 
-	 * config/routes.php, it's displayed at http://example.com/
-	 *
-	 * So any other public methods not prefixed with an underscore will
-	 * map to /index.php/welcome/<method_name>
-	 * @see http://codeigniter.com/user_guide/general/urls.html
-	 */
+	
 	public function index($highway_id)
 	{
 		//loading required models
@@ -27,7 +13,7 @@ class Welcome extends CI_Controller {
 		$this->load->model("views_model");
 		//foreward (from start to end )travel times
 		$travel_times = array();
-		//foreward (from start to end )travel times
+		//backward (from end to start )travel times
 		$travel_times_back = array();
 		//highway travel time in foreward direction
 		$highway_travel_time = 0;
@@ -113,9 +99,9 @@ class Welcome extends CI_Controller {
 		//getting the backward travel times of the highway
 		for($i=count($highway_stations) - 2;$i> 0 ;$i--){
 			$travel_time = 0;
-			echo "from ".$highway_stations[$i - 1]['id']." to ".$highway_stations[$i]['id']."<br/>";
+			//echo "from ".$highway_stations[$i - 1]['id']." to ".$highway_stations[$i]['id']."<br/>";
 			foreach($segments_travel_times as $segment_travel_time){
-				echo "segment: from ".$segment_travel_time['from_station_id']." to ".$segment_travel_time['to_station_id']."<br/>";
+				//echo "segment: from ".$segment_travel_time['from_station_id']." to ".$segment_travel_time['to_station_id']."<br/>";
 				if($segment_travel_time['from_station_id'] == $highway_stations[$i + 1]['id']){
 					if($segment_travel_time['to_station_id'] == $highway_stations[$i]['id']){
 						//$travel_time = $segments_travel_time;
