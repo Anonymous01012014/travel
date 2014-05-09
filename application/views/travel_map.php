@@ -1,10 +1,18 @@
-<!-- set the fields that will be multiplied :) -->
-
+<script>
+	$( document ).ready(function() {		
+		// Handler for .ready() called.
+		site = "Oklahome";
+		latitude = 35.47278;
+		longitude = -98.75722;				
+		//get Oklahome map		
+		map = showMap(latitude , longitude);			
+	});		
+</script>
 
 <div id="container" class="col-md-8 col-md-offset-2">
 	
-	<div id="travel_map" style="width:60%; height:500px;float:left">
-		
+	<div id="travel_map" style="width:60%; height:500px;float:left">		
+		<div id="googleMap" style="width:100%;height:100%;"></div>  		
 	</div>
 	
 	<div id="parameters" style="width:40%;float:right">
@@ -12,7 +20,8 @@
 		<h1>Search</h1>
 		<hr/>	
 		<select name="highway" id="highway" class="form-control">
-			<?php
+			<option value="0">---</option>
+			<?php				
 				foreach($highways as $highway)
 				{
 			?>
@@ -52,54 +61,25 @@
 <script>
 	$( document ).ready(function() {
   	// Handler for .ready() called.
-  		$( "#highway" ).change(function() {  			
-	  		$.ajax({	
-	  		  type: "post",			  
-			  url: window.location.protocol + "//" + window.location.host + window.location.pathname + "/ajaxGetTravelTimeByHighway",
-			  data: {highway_id : $("#highway").val()},
-			  success: function(data){			  	
-			  	//Parse json data
-			  	result = JSON.parse(data);
-			  	travel_times = result[0];
-			  	travel_times_back = result[3];
-			  	 
-			  	
-			  	//fill out hte high way info
-			  	highway_name = $( "#highway option:selected" ).text();
-			  	$("#highway_name").text(highway_name);
-			  	
-			  	//get the travel time for the highway in the forward direction
-			  	highway_travel_time_forward = 0;
-			  				  	
-			  	for(i = 0 ; i < travel_times.length ; i++)
-			  	{
-			  		if(travel_times[i]["travel_time"])
-			  		{
-			  			highway_travel_time_forward += travel_times[i]["travel_time"]*1;			  			
-			  		}
-			  	}
-			  	$("#highway_travel_time_forward").text(highway_travel_time_forward + " sec");
-			  	
-			  	
-			  	//get the travel time for the highway in the backward direction
-			  	highway_travel_time_backward= 0;
-			  				  	
-			  	for(i = 0 ; i < travel_times_back.length ; i++)
-			  	{
-			  		if(travel_times_back[i]["travel_time"])
-			  		{
-			  			highway_travel_time_backward += travel_times_back[i]["travel_time"]*1;			  			
-			  		}
-			  	}
-			  	$("#highway_travel_time_backward").text(highway_travel_time_backward + " sec");
-			  	
-			  	
-			  	},
-			  error: function (xhr, ajaxOptions, thrownError) {
-				        alert(xhr.status);
-				        alert(thrownError);
-				      }
-			}); // end of ajax   	  	
+  		$( "#highway" ).change(function() {
+  			
+  			//show highway info  
+  			highway_id = $("#highway").val();
+  			
+  			//if highway id == 0 then nothing will happen
+  			if(highway_id != 0 )
+  			{
+				//show highway information  				
+  				stations = showHighwayInfo(highway_id);
+  				
+  			//	stations = stations[2];				
+				//set stations markers			
+				//addStationToMap( map  , stations);
+  			}			
+	  				
 		}); // end of on change
 	}); // end of document ready
 </script>
+
+
+

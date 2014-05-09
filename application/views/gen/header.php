@@ -44,6 +44,11 @@
 	<script src="<?php echo base_url();?>js/select2.js"></script>
 	
 	
+	<!-- google map -->
+	<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDczDfEHTE-O8noyduCL0zC1MDmVx_cJLU&sensor=false"></script>
+	<script src="<?php echo base_url();?>js/map.js"></script>
+	
+	
 </head>
 
 
