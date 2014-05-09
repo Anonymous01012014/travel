@@ -72,9 +72,10 @@
 				//show highway information  				
   				stations = showHighwayInfo(highway_id);
   				
-  			//	stations = stations[2];				
+  				stations = stations[2];	
+  						
 				//set stations markers			
-				//addStationToMap( map  , stations);
+				addStationToMap( map  , stations);
   			}			
 	  				
 		}); // end of on change

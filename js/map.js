@@ -142,9 +142,10 @@ function showHighwayInfo(highway_id)
 {
 	var result;
 	
-	
 	$.ajax({	
-	  type: "post",			  
+	  type: "post",
+	  async: false,
+      cache: false,			  
 	  url: window.location.protocol + "//" + window.location.host + window.location.pathname + "/ajaxGetTravelTimeByHighway",
 	  data: {highway_id : highway_id},
 	  success: function(data){			  	
@@ -183,11 +184,14 @@ function showHighwayInfo(highway_id)
 	  		}
 	  	}
 	  	$("#highway_travel_time_backward").text(highway_travel_time_backward + " sec");
-	  		  	
+	  	
+	  		
 	  	},
 	  error: function (xhr, ajaxOptions, thrownError) {
 		        alert(xhr.status);
 		        alert(thrownError);
 		      }
-	}); // end of ajax   	  	
+	}); // end of ajax 
+	
+	return result;  	  	
 }
