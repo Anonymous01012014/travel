@@ -40,55 +40,6 @@ function showMap(latitude, longitude)
 
 
 /**
- * Function name : getSiteInfo
- * Description: 
- * get site information by id and set it to the site info table
- * 
- * created date: 14-2-2014
- * ccreated by: Eng. Mohanad Shab Kaleia
- * contact: ms.kaleia@gmail.com 
- */
-
-function getSiteInfo(url , site_id)
-{	
-	$.get(url + "/" + site_id , function(data){		
-		var site = jQuery.parseJSON(data);		
-		
-		//get site with index 0
-		site = site[0];			
-			
-		//set the site data in the site information pane
-		
-		//site name		
-		$("#wim_name").html(site.Site_Name);
-		
-		//last response
-		$("#last_response").html(site.DateTime);
-		
-		//last check
-		$("#last_check").html(site.DateTime);
-		
-		//Result
-		$("#result").html(site.SchedulerStatus);
-		
-		//signal
-		$("#signal").html(site.signal);
-		
-		//Latitude
-		$("#latitude").html(site.Site_Latitude);
-		
-		//longitude
-		$("#longitude").html(site.Site_Longitude);
-		
-		
-	});	
-}
-
-
-
-
-
-/**
  * Function name : addStationToMap
  * Description: 
  * add station to the map
@@ -100,30 +51,61 @@ function getSiteInfo(url , site_id)
  * contact: ms.kaleia@gmail.com 
  */
 function addStationToMap(map , stations)
-{		
-			alert("hi");									
-			//print a marker for each site
-			for(i = 0 ; i < stations.length ; i++)
-			{
-				var markerPosition=new google.maps.LatLng(stations[i]['latitude'] , stations[i]['longitude']);
-				var pinColor = 'FFFF00';
-				var pinIcon = new google.maps.MarkerImage(
-					"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
-					null,null,null,new google.maps.Size(15, 30)
-								);
+{													
+			//compute the center of lat and long of the highway
+			if(stations.length > 0)
+			{				
+				
+				//print a marker for each site
+				for(i = 0 ; i < stations.length ; i++)
+				{
+					var markerPosition=new google.maps.LatLng(stations[i]['latitude'] , stations[i]['longitude']);
+					var pinColor = 'FFFF00';
+					var pinIcon = new google.maps.MarkerImage(
+						"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
+						null,null,null,new google.maps.Size(15, 30)
+									);
+						
+						var infowindow = new google.maps.InfoWindow({
+							maxWidth: 320
+								  });
+					  marker[stations[i]['id']]=new google.maps.Marker({
+					  position:markerPosition,
+					  icon: pinIcon,
+					  siteId: stations[i]['id']
+					  });
+		
+					station_id = stations[i]['id'];
+					marker[station_id.toString()].setMap(map);	
 					
-					var infowindow = new google.maps.InfoWindow({
-						maxWidth: 320
-							  });
-				 marker[stations[i]['id']]=new google.maps.Marker({
-				  position:markerPosition,
-				  icon: pinIcon,
-				  siteId: stations[i]['id']
-				  });
-	
-				station_id = stations[i]['id'];
-				marker[station_id.toString()].setMap(map);				
-			}					
+					google.maps.event.addListener(marker[station_id.toString()],'click',function(i) {
+								  
+						//show site info in the right panel
+						return function(){							
+							infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Station ID: "+ stations[i]['station_id'] +"</div>");
+							  	
+							var station_id = stations[i]['id'];
+							
+							infowindow.open(map,marker[station_id.toString()]);								
+						}	  
+					}(i));
+								
+				}	
+			
+				
+				//set the center of the map .. get the average of first and last station lat and long 
+				center_lat  = 	(stations[0]['latitude'] + stations[stations.length - 1]['latitude']) / 2;
+				center_long = 	(stations[0]['longitude']+ stations[stations.length - 1]['longitude']) / 2;			
+				setMapCenter(map , center_lat , center_long);
+			
+				//draw line between two stations
+				drawRoute(map , stations);
+				
+			
+		     } //end stations is not empty if statement 		
+		     
+		     
+		    
 }
 
 
@@ -194,4 +176,78 @@ function showHighwayInfo(highway_id)
 	}); // end of ajax 
 	
 	return result;  	  	
+}
+
+
+
+
+
+/**
+ * Function name : setMapCenter
+ * Description: 
+ * set the center of the map depending on the 
+ * parameres:
+ * map: map object of google map
+ * latitude: latitude
+ * longitude: longitude 
+ * created date: 11-5-2014
+ * ccreated by: Mohanad kaleia
+ * contact: ms.kaleia@gmail.com 
+ */
+function setMapCenter(map , latitude , longitude)
+{
+	//set the center of the map 
+	map.setCenter(new google.maps.LatLng(latitude, longitude));												
+}
+
+
+
+
+/**
+ * Function name : drawRoute
+ * Description: 
+ * set the center of the map depending on the 
+ * parameres:
+ * map: map object of google map
+ * latitude: latitude
+ * longitude: longitude 
+ * created date: 11-5-2014
+ * ccreated by: Mohanad kaleia
+ * contact: ms.kaleia@gmail.com 
+ */
+function drawRoute(map , stations)
+{
+	var path = new google.maps.MVCArray();
+    var service = new google.maps.DirectionsService();
+	var poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
+	
+	var lat_lng = new Array();
+	
+	myLatlng = new google.maps.LatLng(stations[0]['latitude'], stations[0]['longitude']);			
+	lat_lng.push(myLatlng) ;
+	
+	myLatlng = new google.maps.LatLng(stations[stations.length - 1]['latitude'], stations[stations.length - 1]['longitude']);			
+	lat_lng.push(myLatlng) ;
+	
+	var src = lat_lng[0];
+    var des = lat_lng[1];
+    path.push(src);
+    poly.setPath(path);
+	service.route({
+           origin: src,
+           destination: des,
+           travelMode: google.maps.DirectionsTravelMode.DRIVING
+       }, function (result, status) {
+           if (status == google.maps.DirectionsStatus.OK) {
+               for (var i = 0, len = result.routes[0].overview_path.length; i < len; i++) 
+               {
+                   path.push(result.routes[0].overview_path[i]);
+               }
+           }
+       });	
+       
+       google.maps.event.addListener(poly, 'click', function (event) {
+		        //alert the index of the polygon
+		        alert("hello");
+		    }); 	
 }
