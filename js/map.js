@@ -219,35 +219,39 @@ function drawRoute(map , stations)
 {
 	var path = new google.maps.MVCArray();
     var service = new google.maps.DirectionsService();
-	var poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
-	
-	var lat_lng = new Array();
-	
-	myLatlng = new google.maps.LatLng(stations[0]['latitude'], stations[0]['longitude']);			
-	lat_lng.push(myLatlng) ;
-	
-	myLatlng = new google.maps.LatLng(stations[stations.length - 1]['latitude'], stations[stations.length - 1]['longitude']);			
-	lat_lng.push(myLatlng) ;
-	
-	var src = lat_lng[0];
-    var des = lat_lng[1];
-    path.push(src);
-    poly.setPath(path);
-	service.route({
-           origin: src,
-           destination: des,
-           travelMode: google.maps.DirectionsTravelMode.DRIVING
-       }, function (result, status) {
-           if (status == google.maps.DirectionsStatus.OK) {
-               for (var i = 0, len = result.routes[0].overview_path.length; i < len; i++) 
-               {
-                   path.push(result.routes[0].overview_path[i]);
-               }
-           }
-       });	
-       
-       google.maps.event.addListener(poly, 'click', function (event) {
-		        //alert the index of the polygon
-		        alert("hello");
-		    }); 	
+    var polylines = new Array();
+    for(var i=0; i<stations.length -2;i++ ){
+		var poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
+		
+		var lat_lng = new Array();
+		
+		myLatlng = new google.maps.LatLng(stations[i]['latitude'], stations[i]['longitude']);			
+		lat_lng.push(myLatlng) ;
+		
+		myLatlng = new google.maps.LatLng(stations[i + 1]['latitude'], stations[i + 1]['longitude']);			
+		lat_lng.push(myLatlng) ;
+		
+		var src = lat_lng[0];
+		var des = lat_lng[1];
+		path.push(src);
+		poly.setPath(path);
+		service.route({
+			   origin: src,
+			   destination: des,
+			   travelMode: google.maps.DirectionsTravelMode.DRIVING
+		   }, function (result, status) {
+			   if (status == google.maps.DirectionsStatus.OK) {
+				   for (var i = 0, len = result.routes[0].overview_path.length; i < len; i++) 
+				   {
+					   path.push(result.routes[0].overview_path[i]);
+				   }
+			   }
+		   });	
+		   
+		   google.maps.event.addListener(poly, 'click', function (event) {
+					//alert the index of the polygon
+					alert("hello");
+				}); 	
+				polylines.push(poly);
+	}
 }
