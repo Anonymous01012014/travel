@@ -72,6 +72,7 @@
 				//show highway information  				
   				stations = showHighwayInfo(highway_id);
   				
+  				//send only stations array
   				stations = stations[2];	
   						
 				//set stations markers			
