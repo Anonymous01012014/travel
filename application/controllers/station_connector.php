@@ -61,20 +61,25 @@
 		 */
 		public function onMessage(ConnectionInterface $from, $msg) {
 			// check if the message is from an already authenticated station
+			//parse the not allowed characters using the url_encode
+			$msg = urlencode($msg);
+			//if the connection is not authorized yet then this message should be the authentication message
 			if($from->authenticated){
 				//get the satation_ID from the message
+				
 				//check this station existence in the database
-				$station_exists = shell_exec("php index.php main checkStation ".$station_ID);
+				$station_exists = shell_exec("php index.php main checkStation ".$msg." &");
 				if($station_exists){
+					//if the station exists in the database then set the connection authenticated field to true
 					$from->authenticated = true;
 					$numRecv = count($this->clients) - 1;
 				
-				echo sprintf('Connection %d sending main "%s"\n'
+					echo sprintf('Connection %d sending main "%s"\n'
 					, $from->resourceId, $msg);
-					//send the message to the station controller to be parsed
-					$result = shell_exec("php index.php main receive_message ".$msg);
-					//send the result back to the station
-					$from->send($result);
+					//send back an Acknoledgement message to the station
+					$message = array("Ack"=>$station_exists);
+					$message = json_encode($message);
+					$from->send(message);
 				}else{
 					echo "Unauthorized connection {$from->resourceId} closed\n";
 					$from->send("This connection is unauthorized so it was closed!");
@@ -86,10 +91,12 @@
 				
 				echo sprintf('Connection %d sending message "%s"\n'
 					, $from->resourceId, $msg);
+				//parse the not allowed characters using the url_encode
+				$msg = url_encode($msg);
 				//send the message to the station controller to be parsed
-				$result = shell_exec("php index.php message receive_message ".$msg);
+				$result = shell_exec("php index.php message receive_message ".$msg." &");
 				//send the result back to the station
-					$from->send($result);
+				$from->send($result);
 			}
 		}
 		/**

@@ -45,7 +45,7 @@ class Main extends CI_Controller {
 	public function receiveMessage($msg)
 	{
 		$this->message = $msg.PHP_EOL;
-		parse_message();
+		parseMessage();
 	}
 	
 	/**
@@ -61,7 +61,10 @@ class Main extends CI_Controller {
 	 */
 	public function parseMessage(){
 		//parse message
-		//check if the station exists in the datbase
+		$this->message = urldecode($this->message);
+		//decode the message from json to php object
+		$this->message = json_decode($message);
+		//define the type of the message 
 		//if(/*New station*/){
 			
 			newStation($station_ID,$long,$lat);
@@ -85,7 +88,11 @@ class Main extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function checkStation($station_ID){
+	public function checkStation($msg){
+		//parse message
+		$msg = urldecode($msg);
+		//getting the station id from the message
+		
 		//loading station model
 		$this->load->model('station_model');
 		
@@ -134,8 +141,6 @@ class Main extends CI_Controller {
 			$highway_id = $highway['id']; 
 		}
 		//filling the model fields
-		$station_id = $this->station['id'];
-		$this->station_model->id = $station_id;
 		$this->station_model->station_ID = $station_ID;
 		$this->station_model->longitude = $long;
 		$this->station_model->latitude = $lat;
@@ -144,9 +149,11 @@ class Main extends CI_Controller {
 		
 		//execute station adding function
 		$this->station_model->startStation();
+		//getting the station id
+		$station_id = $this->station_model->getStationByStationID();
+		$station_id = $station_id[0]['id'];
 		
 		//get all of the highway's stations
-		$this->load->model('station_model');
 		$this->station_model->highway_id = $highway_id;
 		$highway_stations = $this->station_model->getStationsbyHighway();
 		
@@ -210,6 +217,7 @@ class Main extends CI_Controller {
 			//setting the origin and destinations of google's distance matrix request
 			$order = 0;
 			foreach($stations as $station){
+				echo $station['id'] . " ".$station_id;
 				if($station['id'] == $station_id){
 					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
@@ -234,11 +242,11 @@ class Main extends CI_Controller {
 				//forming the url to be sent
 				var_dump($origin);
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				//echo $url;
+				echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
-				//echo $body;
+				echo $body;
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
 				foreach($decoded->rows[0]->elements as $element){

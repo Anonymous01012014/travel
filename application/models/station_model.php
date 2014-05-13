@@ -116,7 +116,7 @@ class Station_model extends CI_Model{
 					status = {$this->status},		
 					start_date = CAST(GETDATE() AS DATE),		
 					highway_id = {$this->highway_id}		
-	 			  WHERE id = {$this->id}";
+	 			  WHERE station_ID = {$this->station_ID}";
 		$this->db->query($query);
 		return true;
 	 }
