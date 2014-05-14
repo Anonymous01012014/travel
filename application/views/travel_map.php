@@ -53,6 +53,22 @@
 				<td id="highway_travel_time_backward"></td>
 			</tr>
 		</table>
+		
+		
+		<table class="table table-striped" id="stations_info">
+			<tr>
+				<th>
+					From station
+				</th>
+				
+				<th>
+					To station
+				</th>
+				<th>
+					Expected time
+				</th>
+			</tr>
+		</table>
 	</div>
 	
 </div>
