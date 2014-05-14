@@ -142,5 +142,26 @@ class Travel_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+	/**
+	 * function name : getTravelByPassings
+	 * 
+	 * Description : 
+	 * Returns the data of the travel specified by the pass_from and pass_to fields
+	 * 
+	 * Created date : 14-05-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getTravelByPassings(){
+		$query = "SELECT * 
+				  FROM travel
+				  WHERE passing_from = {$this->pass_from}
+					AND passing_to = {$this->pass_to}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
 	 
 }
