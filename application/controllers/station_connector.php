@@ -45,6 +45,8 @@
 		public function onOpen(ConnectionInterface $conn) {
 			//add authenticated field to the connection object before attaching it to the clients storage
 			$conn->authenticated = false;
+			//add last message seq field to the client's object for future usage.
+			$conn->last_message_seq = "";
 			// Store the new connection to send messages to later
 			$this->clients->attach($conn);
 			echo "New connection! ({$conn->resourceId})\n";
@@ -60,43 +62,73 @@
 		 * contact: molham225@gmail.com
 		 */
 		public function onMessage(ConnectionInterface $from, $msg) {
-			// check if the message is from an already authenticated station
-			//parse the not allowed characters using the url_encode
-			$msg = urlencode($msg);
-			//if the connection is not authorized yet then this message should be the authentication message
-			if($from->authenticated){
-				//get the satation_ID from the message
-				
-				//check this station existence in the database
-				$station_exists = shell_exec("php index.php main checkStation ".$msg." &");
-				if($station_exists){
-					//if the station exists in the database then set the connection authenticated field to true
-					$from->authenticated = true;
-					$numRecv = count($this->clients) - 1;
-				
-					echo sprintf('Connection %d sending main "%s"\n'
-					, $from->resourceId, $msg);
-					//send back an Acknoledgement message to the station
-					$message = array("Ack"=>$station_exists);
-					$message = json_encode($message);
-					$from->send(message);
+			//the json decoded message
+			$decoded_msg = "";
+			//check if the message is in JSON format
+			try{
+				$decoded_msg = json_decode($msg);
+				//get the message sequence 
+				$message_sequence =  $decoded_msg->message_seq;
+				if($message_sequence != "" && is_numeric($message_sequence))// if the message sequence is valid
+				{
+					if($message_sequence) != $from->last_message_seq){//if the message wasn't a duplicate to the last message
+						//parse the not allowed characters using the url_encode
+						$msg = urlencode($msg);
+						//if the connection is not authorized yet then this message should be the authentication message
+						if(!$from->authenticated){
+							//get the satation_ID from the message
+							$station_ID = $decoded_msg->station_ID;
+							//check this station existence in the database
+							$station_exists = shell_exec("php index.php main checkStation ".$msg." ");
+							if($station_exists == "true"){
+								//if the station exists in the database then set the connection authenticated field to true
+								$from->authenticated = true;
+								
+								//send the message to the station controller to be parsed and executed
+								$result = shell_exec("php index.php message receive_message ".$msg." &");
+								
+								$numRecv = count($this->clients) - 1;
+							
+								echo sprintf('Connection %d sending main "%s"\n'
+								, $from->resourceId, $msg);
+								//send back an Acknoledgement message to the station
+								$message = array("ACK"=> $message_sequence);
+								$message = json_encode($message);
+								$from->send(message);
+							}else{
+								echo "Unauthorized connection {$from->resourceId} closed\n";
+								$error = array("error"=>"This connection is unauthorized so it will be closed!");
+								$from->send(json_encode($error));
+								$from->close();
+							}
+						}else{
+						
+							$numRecv = count($this->clients) - 1;
+							
+							echo sprintf('Connection %d sending message "%s"\n'
+								, $from->resourceId, $msg);
+							//send the message to the station controller to be parsed
+							$result = shell_exec("php index.php message receive_message ".$msg." &");
+							//send back an Acknoledgement message to the station
+							$message = array("ACK"=> $message_sequence);
+							$message = json_encode($message);
+							$from->send(message);
+						}
+					}
 				}else{
+					throw new Exception('Invalid message sequence');
+				}
+			}catch(Exception $e){
+				echo "Invalid message from connection {$from->resourceId}\n".$e->getMessage();
+				$error = array("error"=>"Invalid message!");
+				$from->send(json_encode($error));
+				//if the connection that sent the misformatted message is not authenticated close the connection
+				if(!$from->authenticated){
 					echo "Unauthorized connection {$from->resourceId} closed\n";
-					$from->send("This connection is unauthorized so it was closed!");
+					$error = array("error"=>"This connection is unauthorized so it will be closed!");
+					$from->send(json_encode($error));
 					$from->close();
 				}
-			}else{
-			
-				$numRecv = count($this->clients) - 1;
-				
-				echo sprintf('Connection %d sending message "%s"\n'
-					, $from->resourceId, $msg);
-				//parse the not allowed characters using the url_encode
-				$msg = url_encode($msg);
-				//send the message to the station controller to be parsed
-				$result = shell_exec("php index.php message receive_message ".$msg." &");
-				//send the result back to the station
-				$from->send($result);
 			}
 		}
 		/**

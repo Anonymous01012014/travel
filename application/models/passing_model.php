@@ -171,7 +171,30 @@ class Passing_model extends CI_Model{
 	 public function getPassingDatabyTraveller(){
 		$query = "SELECT * 
 				  FROM passing
-				  where traveller_id={$this->id}";
+				  where traveller_id={$this->traveller_id}";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 /**
+	 * function name : checkPassingExist
+	 * 
+	 * Description : 
+	 * Returns the data of the specified passing by the given fields
+	 * 
+	 * Created date : 21-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function checkPassingExist(){
+		$query = "SELECT * 
+				  FROM passing
+				  where traveller_id = {$this->traveller_id}
+					AND station_id = {$this->station_id}
+					AND passing_time = {$this->passing_time}";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
@@ -192,7 +215,47 @@ class Passing_model extends CI_Model{
 	 public function getLastTravellerPassing(){
 		$query = "SELECT top 1 id AS id ,passing_time FROM passing
 				  where traveller_id = {$this->traveller_id}
-				  Order By id desc";
+				  Order By passing_time desc";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 /**
+	 * function name : getPreviousPassing
+	 * 
+	 * Description : 
+	 * Returns the passing before the given passing time
+	 * 
+	 * Created date : 25-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat*
+	 * contact : molham225@gmail.com
+	 */
+	 public function getPreviousPassing(){
+		$query = "SELECT top 1 id AS id ,passing_time FROM passing
+				  where passing_time <= {$this->passing_time}
+				  Order By passing_time desc";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 /**
+	 * function name : getNextPassing
+	 * 
+	 * Description : 
+	 * Returns the passing after the given passing time
+	 * 
+	 * Created date : 25-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat*
+	 * contact : molham225@gmail.com
+	 */
+	 public function getNextPassing(){
+		$query = "SELECT top 1 id AS id ,passing_time FROM passing
+				  where passing_time >= {$this->passing_time}
+				  Order By passing_time asc";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
