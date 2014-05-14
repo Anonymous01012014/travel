@@ -53,6 +53,22 @@
 				<td id="highway_travel_time_backward"></td>
 			</tr>
 		</table>
+		
+		
+		<table class="table table-striped" id="stations_info">
+			<tr>
+				<th>
+					From station
+				</th>
+				
+				<th>
+					To station
+				</th>
+				<th>
+					Expected time
+				</th>
+			</tr>
+		</table>
 	</div>
 	
 </div>
@@ -72,6 +88,7 @@
 				//show highway information  				
   				stations = showHighwayInfo(highway_id);
   				
+  				//send only stations array
   				stations = stations[2];	
   						
 				//set stations markers			

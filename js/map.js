@@ -62,8 +62,9 @@ function addStationToMap(map , stations)
 					var markerPosition=new google.maps.LatLng(stations[i]['latitude'] , stations[i]['longitude']);
 					var pinColor = 'FFFF00';
 					var pinIcon = new google.maps.MarkerImage(
-						"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
-						null,null,null,new google.maps.Size(15, 30)
+						//"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
+						"http://localhost:8080/travel/images/google_marker/number_"+i+".png",
+						null,null,null,new google.maps.Size(30, 30)
 									);
 						
 						var infowindow = new google.maps.InfoWindow({
@@ -96,16 +97,9 @@ function addStationToMap(map , stations)
 				//set the center of the map .. get the average of first and last station lat and long 
 				center_lat  = 	(stations[0]['latitude'] + stations[stations.length - 1]['latitude']) / 2;
 				center_long = 	(stations[0]['longitude']+ stations[stations.length - 1]['longitude']) / 2;			
-				setMapCenter(map , center_lat , center_long);
-			
-				//draw line between two stations
-				drawRoute(map , stations);
-				
-			
+				setMapCenter(map , center_lat , center_long);			
 		     } //end stations is not empty if statement 		
 		     
-		     
-		    
 }
 
 
@@ -130,15 +124,24 @@ function showHighwayInfo(highway_id)
       cache: false,			  
 	  url: window.location.protocol + "//" + window.location.host + window.location.pathname + "/ajaxGetTravelTimeByHighway",
 	  data: {highway_id : highway_id},
-	  success: function(data){			  	
+	  success: function(data){	
+	  	
+	  	// on success show highway information on the right sidebar
+	  	// show travel time - travel time backward - show travel time for stations
+	  	
+	  			  	
 	  	//Parse json data
 	  	result = JSON.parse(data);
 	  	
 	  	travel_times = result[0];
 	  	travel_times_back = result[3];
+	  	stations = result[2];
 	  	 
 	  	
 	  	//fill out hte high way info
+	  	
+	  	
+	  	//highway name
 	  	highway_name = $( "#highway option:selected" ).text();
 	  	$("#highway_name").text(highway_name);
 	  	
@@ -167,8 +170,64 @@ function showHighwayInfo(highway_id)
 	  	}
 	  	$("#highway_travel_time_backward").text(highway_travel_time_backward + " sec");
 	  	
+	  	
+	  	//show station travel time in forward direction
+	  	for(i= 0 ; i < travel_times.length ; i++)
+	  	{	  			
+	  			if(travel_times[i])
+	  			{
+	  				info_line = "<tr><td>";
+	  			
+		  			//show from station name 
+		  			info_line += getStationIndex(stations ,  travel_times[i]['from_station']);
+		  			info_line += "</td><td>";
+		  			
+		  			//show to station name
+		  			info_line += getStationIndex(stations ,  travel_times[i]['to_station']); 
+		  			info_line += "</td><td>";
+		  			
+		  			//show travel time
+		  			info_line += travel_times[i]['travel_time'] + " sec";
+		  			info_line += "</td></tr>";
+		  			
+		  			//add this line to the table
+		  			$( "#stations_info" ).append( info_line );	
+	  			}	  			
+	  	}
+	  	
+	  	//show station travel time in BACKWORD direction
+	  	for(i= 0 ; i < travel_times_back.length ; i++)
+	  	{	  			
+	  			if(travel_times_back[i])
+	  			{
+	  				info_line = "<tr><td>";
+	  			
+		  			//show from station name 
+		  			info_line +=  getStationIndex(stations ,  travel_times_back[i]['from_station']);  
+		  			info_line += "</td><td>";
+		  			
+		  			//show to station name
+		  			info_line += getStationIndex(stations ,  travel_times_back[i]['to_station']); 
+		  			info_line += "</td><td>";
+		  			
+		  			//show travel time
+		  			info_line += travel_times_back[i]['travel_time'] + " sec";
+		  			info_line += "</td></tr>";
+		  			
+		  			//add this line to the table
+		  			$( "#stations_info" ).append( info_line );	
+	  			}
+	  			
+	  			
+	  	}
+	  	
+	  	
+	  	
 	  		
-	  	},
+	  	}
+	  	
+	  	
+	  	,
 	  error: function (xhr, ajaxOptions, thrownError) {
 		        alert(xhr.status);
 		        alert(thrownError);
@@ -255,3 +314,36 @@ function drawRoute(map , stations)
 				polylines.push(poly);
 	}
 }
+
+
+
+
+
+/**
+ * Function name : getStationIndex
+ * Description: 
+ * get station index by station_id
+ * parameres:
+ * station: an array of stations
+ * station_id: the station id that we want to get its 
+ * longitude: longitude 
+ * created date: 11-5-2014
+ * ccreated by: Mohanad kaleia
+ * contact: ms.kaleia@gmail.com 
+ */
+function getStationIndex(stations , station_id)
+{
+	for(station_index=0;station_index<stations.length;station_index++)
+	{		
+	   if(stations[station_index]["station_id"] == station_id)
+	   {		   	
+	      //alert("found station Id :" + station_id + " is for index " + station_index);   		   	  
+	      //found
+	      return station_index;	      
+	   }	     	 
+	}
+	
+	//if no station was found then return 0
+	return 0;											
+}
+
