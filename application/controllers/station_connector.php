@@ -80,21 +80,25 @@
 							$station_ID = $decoded_msg->station_ID;
 							//check this station existence in the database
 							$station_exists = shell_exec("php index.php main checkStation ".$msg." ");
-							if($station_exists == "true"){
-								//if the station exists in the database then set the connection authenticated field to true
+							//if the returned station id > 0 then the station was found
+							if($station_exists > 0){
+								//if the station exists in the database then set the connection authenticated field to true 
 								$from->authenticated = true;
+								//and add the station id to the connection object
+								$from->station_id = $station_exists * 1;
 								
 								//send the message to the station controller to be parsed and executed
 								$result = shell_exec("php index.php message receive_message ".$msg." &");
 								
 								$numRecv = count($this->clients) - 1;
-							
-								echo sprintf('Connection %d sending main "%s"\n'
-								, $from->resourceId, $msg);
+								//log the action to the cmd
+								echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
+								
 								//send back an Acknoledgement message to the station
 								$message = array("ACK"=> $message_sequence);
 								$message = json_encode($message);
 								$from->send(message);
+								
 							}else{
 								echo "Unauthorized connection {$from->resourceId} closed\n";
 								$error = array("error"=>"This connection is unauthorized so it will be closed!");
@@ -142,6 +146,10 @@
 		 * contact: molham225@gmail.com
 		 */
 		public function onClose(ConnectionInterface $conn) {
+			//if the connecion had a station id field disconnect the station
+			if(isset($conn->station_id)){
+				shell_exec("php index.php message discoonectStation ".$conn->station_id." &");
+			}
 			// The connection is closed, remove it, as we can no longer send it messages
 			$this->clients->detach($conn);
 			echo "Connection {$conn->resourceId} has disconnected\n";

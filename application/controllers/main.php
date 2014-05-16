@@ -84,6 +84,46 @@ class Main extends CI_Controller {
 	/* Station Section*/
 	
 	/**
+	 * Function name : connectStation
+	 * 
+	 * Description: 
+	 * This method changes the status of the station to connected in the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat
+	 * contact: molham225@gmail.com
+	 */
+	public function connectStation($id){
+		//load the stataion model
+		$this->load->model("station_model");
+		//fill the fields of the model
+		$this->station_model->id = $id;
+		$this->station_model->status = $this->station_model->CONNECTED;
+		//execute the change status function
+		$this->station_model->changeStationStatus();
+	}
+	
+	/**
+	 * Function name : disconnectStation
+	 * 
+	 * Description: 
+	 * This method changes the status of the station to disconnected in the database.
+	 * 
+	 * created date: 25-04-2014 
+	 * ccreated by: Eng. Ahmad Mulhem Barakat
+	 * contact: molham225@gmail.com
+	 */
+	public function connectStation($id){
+		//load the stataion model
+		$this->load->model("station_model");
+		//fill the fields of the model
+		$this->station_model->id = $id;
+		$this->station_model->status = $this->station_model->DISCONNECTED;
+		//execute the change status function
+		$this->station_model->changeStationStatus();
+	}
+	
+	/**
 	 * Function name : checkStation
 	 * 
 	 * Description: 
@@ -105,12 +145,12 @@ class Main extends CI_Controller {
 		//get the station specified by the station_ID
 		$station = $this->station_model->getStationByStationID();
 		if(isset($station[0])){
-			//if the station was found put its object in the station field return true
-			$this->station = $station[0];
-			return "true";
+			//if the station was found set the station status to connected and return its id
+			$this->connectStation($station[0]['id']);
+			return $station[0]['id'];
 		}
-		// else return false
-		return "false";
+		// else return 0
+		return 0;
 	}
 	
 	/**
@@ -149,7 +189,7 @@ class Main extends CI_Controller {
 		$this->station_model->station_ID = $station_ID;
 		$this->station_model->longitude = $long;
 		$this->station_model->latitude = $lat;
-		$this->station_model->status = 0;
+		$this->station_model->status = $this->station_model->CONNECTED;
 		$this->station_model->highway_id = $highway_id;
 		
 		//execute station adding function

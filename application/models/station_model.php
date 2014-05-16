@@ -14,6 +14,7 @@
  */    
 
 class Station_model extends CI_Model{
+	
 	/** Station class variables **/
 	
 	//The id field of the station in the database
@@ -43,6 +44,10 @@ class Station_model extends CI_Model{
 	//neighbor list for this station
 	var $neighbors = array();
 	
+	
+	/* Station states */
+	const CONNECTED = 1;
+	const DISCONNECTED = 2;
 	
 	/**
      * Constructor
@@ -342,6 +347,29 @@ class Station_model extends CI_Model{
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
+	 }
+	 
+	 /**
+	 * function name : changeStationStatus
+	 * 
+	 * Description : 
+	 * This function changes the status of the station with the given id to the give status
+	 * 
+	 * parameters:
+	 * 	
+	 * Created date : 16-05-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function changeStationStatus(){
+		$query = "UPDATE station 
+					SET  status = {$this->status}
+					WHERE id = {$this->id}";
+				  
+		$this->db->query($query);
+		return true;
 	 }
 	 
 }
