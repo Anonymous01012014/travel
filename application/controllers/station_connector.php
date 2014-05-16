@@ -71,7 +71,7 @@
 				$message_sequence =  $decoded_msg->message_seq;
 				if($message_sequence != "" && is_numeric($message_sequence))// if the message sequence is valid
 				{
-					if($message_sequence) != $from->last_message_seq){//if the message wasn't a duplicate to the last message
+					if($message_sequence != $from->last_message_seq){//if the message wasn't a duplicate to the last message
 						//parse the not allowed characters using the url_encode
 						$msg = urlencode($msg);
 						//if the connection is not authorized yet then this message should be the authentication message
@@ -180,7 +180,7 @@
                 new Station_connector()
             )
         ),
-        9100
+        9000
     );
 
     $server->run();
