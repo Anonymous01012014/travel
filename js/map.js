@@ -63,7 +63,7 @@ function addStationToMap(map , stations)
 					var pinColor = 'FFFF00';
 					var pinIcon = new google.maps.MarkerImage(
 						//"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
-						"http://localhost:8080/travel/images/google_marker/number_"+i+".png",
+						window.location.protocol+"//"+window.location.host + "/travel/images/google_marker/number_"+i+".png",
 						null,null,null,new google.maps.Size(30, 30)
 									);
 						
@@ -79,6 +79,7 @@ function addStationToMap(map , stations)
 					station_id = stations[i]['id'];
 					marker[station_id.toString()].setMap(map);	
 					
+					/** don't do any thing on click 
 					google.maps.event.addListener(marker[station_id.toString()],'click',function(i) {
 								  
 						//show site info in the right panel
@@ -90,7 +91,7 @@ function addStationToMap(map , stations)
 							infowindow.open(map,marker[station_id.toString()]);								
 						}	  
 					}(i));
-								
+					*/			
 				}	
 			
 				
@@ -122,7 +123,7 @@ function showHighwayInfo(highway_id)
 	  type: "post",
 	  async: false,
       cache: false,			  
-	  url: window.location.protocol + "//" + window.location.host + window.location.pathname + "/ajaxGetTravelTimeByHighway",
+	  url: window.location.protocol + "//" + window.location.host +  "/travel/dashboard/ajaxGetTravelTimeByHighway",
 	  data: {highway_id : highway_id},
 	  success: function(data){	
 	  	
@@ -170,6 +171,10 @@ function showHighwayInfo(highway_id)
 	  	}
 	  	$("#highway_travel_time_backward").text(highway_travel_time_backward + " sec");
 	  	
+	  	
+	  	//show station duration header information
+	  	//delete the prev information
+	  	$( "#stations_info tr td" ).remove();	
 	  	
 	  	//show station travel time in forward direction
 	  	for(i= 0 ; i < travel_times.length ; i++)
