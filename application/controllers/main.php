@@ -45,7 +45,7 @@ class Main extends CI_Controller {
 	public function receiveMessage($msg)
 	{
 		$this->message = $msg.PHP_EOL;
-		parseMessage();
+		return parseMessage();
 	}
 	
 	/**
@@ -65,19 +65,37 @@ class Main extends CI_Controller {
 		//decode the message from json to php object
 		$this->message = json_decode($message);
 		//define the type of the message 
-		if ($this->message->message_type == 1)//first deployment message
+		if ($this->message->msg_type == 1)//first deployment message(Registeration message)
 		{
-			$this->newStation($this->message->station_ID,$this->message->longitude,$this->message->latitiude);
-		}
-		else if($this->message->message_type == 2)//single detection message
-		{
-			$this->newPass($this->message->station_ID,$this->message->mac_address$this->message->time);
-		}
-		else if($this->message->message_type == 3)//multiple detections message
-		{
-			foreach($this->message->detections as $detection){//add all the detections to the database
-				$this->newPass($this->message->station_ID,$detection->mac_address,$detection->time);
+			if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
+				return $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+			}else{
+				return "message type doesn't match its content!";
 			}
+		}
+		else if($this->message->msg_type == 2)//single detection message
+		{
+			if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
+				return $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
+			}else{
+				return "message type doesn't match its content!";
+			}
+		}
+		else if($this->message->msg_type == 3)//multiple detections message
+		{
+			if(isset($this->message->dev_mutilap)){
+				foreach($this->message->dev_mutilap as $detection){//add all the detections to the database
+					$returned_value = $this->newPass($this->message->station_id,$detection->mac_address,$detection->time);
+					if($returned_value != "valid"){
+						return "invalid message values!!";
+					}
+				}
+				return "valid";
+			}else{
+				return "message type doesn't match its content!";
+			}
+		}else{
+			return "Invalid message type!";
 		}
 	}
 	
@@ -164,49 +182,55 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function newStation($station_ID,$long,$lat){
+		
 		//loading station model
 		$this->load->model('station_model');
 		//id of the highway
 		$highway_id = 0;
 		/* getting the station's highway id */
-		//get the highway of the station
-		$highway_name = $this->findoutHighway($long,$lat);
-		//check if this highway is in the database
-		$highway = $this->checkHighway($highway_name);
-		if(!$highway){
-			//if it doesn't exist add it
-			//load the model
-			$this->load->model("highway_model");
-			//fill the model fields 
-			$this->highway_model->name = $highway_name;
+		try{
+			//get the highway of the station
+			$highway_name = $this->findoutHighway($long,$lat);
+			//check if this highway is in the database
+			$highway = $this->checkHighway($highway_name);
+			if(!$highway){
+				//if it doesn't exist add it
+				//load the model
+				$this->load->model("highway_model");
+				//fill the model fields 
+				$this->highway_model->name = $highway_name;
+				
+				//execute the addition function and get its id
+				$highway_id = $this->highway_model->addHighway();
+			}else{
+				$highway_id = $highway['id']; 
+			}
+			//filling the model fields
+			$this->station_model->station_ID = $station_ID;
+			$this->station_model->longitude = $long;
+			$this->station_model->latitude = $lat;
+			$this->station_model->status = $this->station_model->CONNECTED;
+			$this->station_model->highway_id = $highway_id;
 			
-			//execute the addition function and get its id
-			$highway_id = $this->highway_model->addHighway();
-		}else{
-			$highway_id = $highway['id']; 
+			//execute station adding function
+			$this->station_model->startStation();
+			//getting the station id
+			$station_id = $this->station_model->getStationByStationID();
+			$station_id = $station_id[0]['id'];
+			
+			//get all of the highway's stations
+			$this->station_model->highway_id = $highway_id;
+			$highway_stations = $this->station_model->getStationsbyHighway();
+			
+			/* finding and adding the new station's neighbors */
+			$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
+				
+			/* recalculate highways beginning and ending stations */
+			$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
+		}catch(Exception $e){
+			return "could not add the new station to the database because of : \n".$e->getMessage();
 		}
-		//filling the model fields
-		$this->station_model->station_ID = $station_ID;
-		$this->station_model->longitude = $long;
-		$this->station_model->latitude = $lat;
-		$this->station_model->status = $this->station_model->CONNECTED;
-		$this->station_model->highway_id = $highway_id;
-		
-		//execute station adding function
-		$this->station_model->startStation();
-		//getting the station id
-		$station_id = $this->station_model->getStationByStationID();
-		$station_id = $station_id[0]['id'];
-		
-		//get all of the highway's stations
-		$this->station_model->highway_id = $highway_id;
-		$highway_stations = $this->station_model->getStationsbyHighway();
-		
-		/* finding and adding the new station's neighbors */
-		$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
-			
-		/* recalculate highways beginning and ending stations */
-		$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
+		return "valid";
 	}
 	
 	
@@ -541,7 +565,8 @@ class Main extends CI_Controller {
 	 */
 	public function newPass($station_id,$mac,$passing_time)
 	{
-		$passing_time = urldecode($passing_time);
+		try{
+		//$passing_time = urldecode($passing_time);
 		//loading  passing model
 		$this->load->model("passing_model");
 		//getting the station from the database
@@ -645,6 +670,10 @@ class Main extends CI_Controller {
 				}
 			}
 		}
+		}catch(Exception $e){
+			return "couldn't add new pass to the database because of : \n".$e->getMessage();
+		}
+		return "valid";
 	}
 	
 	
