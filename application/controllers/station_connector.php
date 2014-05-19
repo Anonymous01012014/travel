@@ -95,17 +95,17 @@
 								echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
 								//if the result came back from the execution == valid then acknoledge the 
 								//message else just return the error message
-								//if($result == "valid"){
+								if($result == "valid"){
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
 									$from->send(message);
-								/*}else{
+								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
 									$from->send(message);
-								}*/
+								}
 								
 							}else{
 								echo "Unauthorized connection {$from->resourceId} closed\n";
@@ -123,17 +123,17 @@
 							$result = shell_exec("php index.php message receive_message ".$msg." &");
 							//if the result came back from the execution == valid then acknoledge the 
 							//message else just return the error message
-							//if($result == "valid"){
+							if($result == "valid"){
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
 									$from->send(message);
-								/*}else{
+								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
 									$from->send(message);
-								}*/
+								}
 						}
 					}
 				}else{
