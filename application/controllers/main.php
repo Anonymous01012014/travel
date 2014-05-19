@@ -131,7 +131,7 @@ class Main extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function connectStation($id){
+	public function disconnectStation($id){
 		//load the stataion model
 		$this->load->model("station_model");
 		//fill the fields of the model
