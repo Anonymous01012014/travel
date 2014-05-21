@@ -576,133 +576,133 @@ class Main extends CI_Controller {
 	public function newPass($station_id,$mac,$passing_time)
 	{
 		try{
-		//$passing_time = urldecode($passing_time);
-		//loading  passing model
-		$this->load->model("passing_model");
-		//getting the station from the database
-		$this->load->model("station_model");
-		
-		$this->station_model->station_ID = $station_id;
-		
-		$station = $this->station_model->getStationByStationID();
-		//if the station exists in the database
-		if(isset($station[0])){
-			//check if this traveller exists in the database
-			$traveller = $this->checkTraveller($mac);
-			if(!$traveller){
-				/* *
-				 * if the traveller not found in the database
-				 * just add the new traveller and the new passing at the specified station
-				 * */
-				//echo 1;
-				//adding the new traveller to database
-				$traveller_id =$this->addTraveller($mac);
-				
-				//prepare fields to add a new pass
-				$this->passing_model->passing_time=$passing_time;
-				$this->passing_model->traveller_id=$traveller_id;
-				$this->passing_model->station_id=$station[0]['id'];
-				$pass_to=$this->passing_model->addPassing();
-			}else{
-				//if the traveller already exists in the database
-				//echo 2;
-				$traveller_id = $traveller['id'];
-				//get the last passing for this traveller 
-				$this->passing_model->traveller_id=$traveller_id;
-				$pass_from=$this->passing_model->getLastTravellerPassing();
-				
-				//determine if we should add new travel or not
-				if(count($pass_from)>0)
-				{
-					$pass_from_time = strtotime($pass_from[0]['passing_time']);//getting the pass from time
-					$pass_to_time = strtotime($passing_time);//getting the pass to time
-					//echo "<br/>".$pass_from_time."||".$pass_to_time."<br />";
-					//if the pass to happened after the pass from then this is a valid pass timing
-					if($pass_from_time < $pass_to_time){
-						/* *
-						 * If the new passing was the latest pass for this traveller in the database 
-						 * just add the pass and add atravel from the previous pass to this pass
-						 * */
-						//echo 3 . "<br />";
-						//prepare fields to add a new pass
-						$this->passing_model->passing_time=$passing_time;
-						$this->passing_model->traveller_id=$traveller_id;
-						$this->passing_model->station_id=$station[0]['id'];
-						$pass_to=$this->passing_model->addPassing();
-						//if the two passings are not at the same station then add a travel
-						if($pass_from[0]['station_id'] != $station[0]['id']){
-							//new travel should be added
-							$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
-						}
-					}else{//if the new pass happened before the latest added pass
-						/* *
-						 * if the new pass happened before the latest added pass we do the following:
-						 * 1- we check if the new pass is added before.
-						 * 2- if not we find the passings before and after this passing.
-						 * 3- we delete the travel between the passings found in the previous step(if it was found).
-						 * 4- we add a travel from the previous passing to the new passing and a travel from the
-						 * 	  new passing to the next passing.
-						 * */
-						 //echo 4 . "<br />";
-						 //check if this passing is already added
-						$this->passing_model->station_id=$station[0]['id'];
-						$this->passing_model->passing_time=$passing_time;
-						$this->passing_model->traveller_id=$traveller_id;
-						$passing_exist = $this->passing_model->checkPassingExist();
-						if(!isset($passing_exist[0])){//if it's not already in the database
-							//add the new passing to the database
+			//$passing_time = urldecode($passing_time);
+			//loading  passing model
+			$this->load->model("passing_model");
+			//getting the station from the database
+			$this->load->model("station_model");
+			
+			$this->station_model->station_ID = $station_id;
+			
+			$station = $this->station_model->getStationByStationID();
+			//if the station exists in the database
+			if(isset($station[0])){
+				//check if this traveller exists in the database
+				$traveller = $this->checkTraveller($mac);
+				if(!$traveller){
+					/* *
+					 * if the traveller not found in the database
+					 * just add the new traveller and the new passing at the specified station
+					 * */
+					//echo 1;
+					//adding the new traveller to database
+					$traveller_id =$this->addTraveller($mac);
+					
+					//prepare fields to add a new pass
+					$this->passing_model->passing_time=$passing_time;
+					$this->passing_model->traveller_id=$traveller_id;
+					$this->passing_model->station_id=$station[0]['id'];
+					$pass_to=$this->passing_model->addPassing();
+				}else{
+					//if the traveller already exists in the database
+					//echo 2;
+					$traveller_id = $traveller['id'];
+					//get the last passing for this traveller 
+					$this->passing_model->traveller_id=$traveller_id;
+					$pass_from=$this->passing_model->getLastTravellerPassing();
+					
+					//determine if we should add new travel or not
+					if(count($pass_from)>0)
+					{
+						$pass_from_time = strtotime($pass_from[0]['passing_time']);//getting the pass from time
+						$pass_to_time = strtotime($passing_time);//getting the pass to time
+						//echo "<br/>".$pass_from_time."||".$pass_to_time."<br />";
+						//if the pass to happened after the pass from then this is a valid pass timing
+						if($pass_from_time < $pass_to_time){
+							/* *
+							 * If the new passing was the latest pass for this traveller in the database 
+							 * just add the pass and add atravel from the previous pass to this pass
+							 * */
+							//echo 3 . "<br />";
+							//prepare fields to add a new pass
 							$this->passing_model->passing_time=$passing_time;
 							$this->passing_model->traveller_id=$traveller_id;
 							$this->passing_model->station_id=$station[0]['id'];
-							
 							$pass_to=$this->passing_model->addPassing();
-							//echo $pass_to. "<br />";
-							//set the model's passing time 
-							$this->passing_model->passing_time = $passing_time;
-							//set the model's traveller id
-							$this->passing_model->traveller_id = $traveller_id;
-							//get the pass previous to the new pass
-							$previous = $this->passing_model->getPreviousPassing();
-							//get the pass after to the new pass
-							$next = $this->passing_model->getNextPassing();
-							//echo "next: ".$next[0]["id"]. "<br />";
-							//echo "previous: ".$previous[0]["id"]. "<br />";
-							//if there is ap passing that happened before this passing
-							if(isset($previous[0])){
-								//if there is ap passing that happened after this passing
-								if(isset($next[0])){
-									//delete the travel from the previous passing to the next passing if it was found
-									//load travel model
-									$this->load->model("travel_model");
-									//fill model fields
-									$this->travel_model->passing_from = $previous[0]["id"]; 
-									$this->travel_model->passing_to = $next[0]["id"]; 
-									
-									//get the travel
-									$travel = $this->travel_model->getTravelByPassings();
-									//if the travel exists
-									if(isset($travel[0])){
-										//set the id field in the model
-										$this->travel_model->id = $travel[0]["id"];
-										//delete the travel
-										$this->travel_model->deleteTravel();
+							//if the two passings are not at the same station then add a travel
+							if($pass_from[0]['station_id'] != $station[0]['id']){
+								//new travel should be added
+								$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
+							}
+						}else{//if the new pass happened before the latest added pass
+							/* *
+							 * if the new pass happened before the latest added pass we do the following:
+							 * 1- we check if the new pass is added before.
+							 * 2- if not we find the passings before and after this passing.
+							 * 3- we delete the travel between the passings found in the previous step(if it was found).
+							 * 4- we add a travel from the previous passing to the new passing and a travel from the
+							 * 	  new passing to the next passing.
+							 * */
+							 //echo 4 . "<br />";
+							 //check if this passing is already added
+							$this->passing_model->station_id=$station[0]['id'];
+							$this->passing_model->passing_time=$passing_time;
+							$this->passing_model->traveller_id=$traveller_id;
+							$passing_exist = $this->passing_model->checkPassingExist();
+							if(!isset($passing_exist[0])){//if it's not already in the database
+								//add the new passing to the database
+								$this->passing_model->passing_time=$passing_time;
+								$this->passing_model->traveller_id=$traveller_id;
+								$this->passing_model->station_id=$station[0]['id'];
+								
+								$pass_to=$this->passing_model->addPassing();
+								//echo $pass_to. "<br />";
+								//set the model's passing time 
+								$this->passing_model->passing_time = $passing_time;
+								//set the model's traveller id
+								$this->passing_model->traveller_id = $traveller_id;
+								//get the pass previous to the new pass
+								$previous = $this->passing_model->getPreviousPassing();
+								//get the pass after to the new pass
+								$next = $this->passing_model->getNextPassing();
+								//echo "next: ".$next[0]["id"]. "<br />";
+								//echo "previous: ".$previous[0]["id"]. "<br />";
+								//if there is ap passing that happened before this passing
+								if(isset($previous[0])){
+									//if there is ap passing that happened after this passing
+									if(isset($next[0])){
+										//delete the travel from the previous passing to the next passing if it was found
+										//load travel model
+										$this->load->model("travel_model");
+										//fill model fields
+										$this->travel_model->passing_from = $previous[0]["id"]; 
+										$this->travel_model->passing_to = $next[0]["id"]; 
+										
+										//get the travel
+										$travel = $this->travel_model->getTravelByPassings();
+										//if the travel exists
+										if(isset($travel[0])){
+											//set the id field in the model
+											$this->travel_model->id = $travel[0]["id"];
+											//delete the travel
+											$this->travel_model->deleteTravel();
+										}
+										//add a travel from the previous passing to the new passing
+										$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
+										//add a travel from the new passing to the next passing
+										$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
 									}
-									//add a travel from the previous passing to the new passing
-									$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
-									//add a travel from the new passing to the next passing
-									$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
 								}
 							}
 						}
 					}
 				}
 			}
-		}
 		}catch(Exception $e){
 			echo "couldn't add new pass to the database because of : \n".$e->getMessage()."\n";
 			return;
 		}
-		return "valid";
+		echo "valid";
 	}
 	
 	

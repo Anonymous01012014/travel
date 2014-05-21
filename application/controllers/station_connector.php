@@ -66,15 +66,15 @@
 			$decoded_msg = "";
 			//check if the message is in JSON format
 			try{
-				echo "\n".$msg."\n";
+				//echo "\n".$msg."\n";
 				$decoded_msg = json_decode($msg);
 				//echo "\n".$decoded_msg."\n";
 				//get the message sequence 
 				$message_sequence =  $decoded_msg->msg_seq;
 				if($message_sequence != "")// if the message sequence is valid
 				{
-					echo "\n".$message_sequence."\n";
-					echo "\n".$from->last_message_seq."\n";
+					//echo "\n".$message_sequence."\n";
+					//echo "\n".$from->last_message_seq."\n";
 					if($message_sequence != $from->last_message_seq){//if the message wasn't a duplicate to the last message
 						//parse the not allowed characters using the url_encode
 						$msg = urlencode($msg);
@@ -98,52 +98,53 @@
 								
 								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
-								echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
+								//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
 								//if the result came back from the execution == valid then acknoledge the 
 								//message else just return the error message
-								echo $result."\n";
+								//echo $result."\n";
 								if($result == "valid"){
 									//setting the last message sequence as the current message
 									$from->last_message_seq = $message_sequence;
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
-									$from->send($message);
+									$this->sendToClient($from,$message);
 								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
-									$from->send($message);
+									$this->sendToClient($from,$message);
 								}
 								
 							}else{
 								echo "Unauthorized connection {$from->resourceId} closed 1\n";
 								$error = array("error"=>"This connection is unauthorized so it will be closed!");
-								$from->send(json_encode($error));
+								$this->sendToClient($from,json_encode($error));
 								$from->close();
 							}
 						}else{
 						
 							$numRecv = count($this->clients) - 1;
 							
-							echo sprintf('Connection %d sending message "%s"\n'
-								, $from->resourceId, $msg);
+							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
+							
 							//send the message to the station controller to be parsed
-							$result = shell_exec("php index.php message receive_message ".$msg." &");
+							$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 							//if the result came back from the execution == valid then acknoledge the 
 							//message else just return the error message
+							//echo "\n".$result."\n";
 							if($result == "valid"){
 								//setting the last message sequence as the current message
 									$from->last_message_seq = $message_sequence;
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
-									$from->send($message);
+									$this->sendToClient($from,$message);
 								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
-									$from->send($message);
+									$this->sendToClient($from,$message);
 								}
 						}
 					}
@@ -153,16 +154,32 @@
 			}catch(Exception $e){
 				echo "Invalid message from connection {$from->resourceId}\n".$e->getMessage();
 				$error = array("error"=>"Invalid message!");
-				$from->send(json_encode($error));
+				$this->sendToClient($from,json_encode($error));
 				//if the connection that sent the misformatted message is not authenticated close the connection
 				if(!$from->authenticated){
 					echo "Unauthorized connection {$from->resourceId} closed 2\n";
 					$error = array("error"=>"This connection is unauthorized so it will be closed!");
-					$from->send(json_encode($error));
+					$this->sendToClient($from,json_encode($error));
 					$from->close();
 				}
 			}
 		}
+		
+		/**
+		 * Function name : sendToClient 
+		 * Description: 
+		 * this function sends message to the specified client after logging it to the cmd.
+		 * 
+		 * 
+		 * created date: 21-05-2014 
+		 * ccreated by: Eng. Ahmad Mulhem Barakat
+		 * contact: molham225@gmail.com
+		 */
+		public function sendToClient($client,$message){
+			echo "sending Message to client ".$client->resourceId." :\n".$message."\n";
+			$client->send($message);
+		}
+		
 		/**
 		 * Function name : __construct
 		 * Description: 
