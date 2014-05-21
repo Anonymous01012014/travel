@@ -66,11 +66,15 @@
 			$decoded_msg = "";
 			//check if the message is in JSON format
 			try{
+				echo "\n".$msg."\n";
 				$decoded_msg = json_decode($msg);
+				//echo "\n".$decoded_msg."\n";
 				//get the message sequence 
 				$message_sequence =  $decoded_msg->msg_seq;
 				if($message_sequence != "")// if the message sequence is valid
 				{
+					echo "\n".$message_sequence."\n";
+					echo "\n".$from->last_message_seq."\n";
 					if($message_sequence != $from->last_message_seq){//if the message wasn't a duplicate to the last message
 						//parse the not allowed characters using the url_encode
 						$msg = urlencode($msg);
@@ -78,8 +82,10 @@
 						if(!$from->authenticated){
 							//get the satation_ID from the message
 							$station_ID = $decoded_msg->station_id;
+							echo "\n".$station_ID."\n";
 							//check this station existence in the database
-							$station_exists = shell_exec("php index.php main checkStation ".$msg." ");
+							$station_exists = shell_exec("php index.php main checkStation ".$station_ID." ");
+							echo "\n".$station_exists."\n";
 							//if the returned station id > 0 then the station was found
 							if($station_exists > 0){
 								//if the station exists in the database then set the connection authenticated field to true 
@@ -88,27 +94,30 @@
 								$from->station_id = $station_exists * 1;
 								
 								//send the message to the station controller to be parsed and executed
-								$result = shell_exec("php index.php message receive_message ".$msg." &");
+								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 								
 								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
 								echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
 								//if the result came back from the execution == valid then acknoledge the 
 								//message else just return the error message
+								echo $result."\n";
 								if($result == "valid"){
+									//setting the last message sequence as the current message
+									$from->last_message_seq = $message_sequence;
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
-									$from->send(message);
+									$from->send($message);
 								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
-									$from->send(message);
+									$from->send($message);
 								}
 								
 							}else{
-								echo "Unauthorized connection {$from->resourceId} closed\n";
+								echo "Unauthorized connection {$from->resourceId} closed 1\n";
 								$error = array("error"=>"This connection is unauthorized so it will be closed!");
 								$from->send(json_encode($error));
 								$from->close();
@@ -124,15 +133,17 @@
 							//if the result came back from the execution == valid then acknoledge the 
 							//message else just return the error message
 							if($result == "valid"){
+								//setting the last message sequence as the current message
+									$from->last_message_seq = $message_sequence;
 									//send back an Acknoledgement message to the station
 									$message = array("ACK"=> $message_sequence);
 									$message = json_encode($message);
-									$from->send(message);
+									$from->send($message);
 								}else{
 									//send back the returned error message to the station
 									$message = array("error"=> $result);
 									$message = json_encode($message);
-									$from->send(message);
+									$from->send($message);
 								}
 						}
 					}
@@ -145,7 +156,7 @@
 				$from->send(json_encode($error));
 				//if the connection that sent the misformatted message is not authenticated close the connection
 				if(!$from->authenticated){
-					echo "Unauthorized connection {$from->resourceId} closed\n";
+					echo "Unauthorized connection {$from->resourceId} closed 2\n";
 					$error = array("error"=>"This connection is unauthorized so it will be closed!");
 					$from->send(json_encode($error));
 					$from->close();

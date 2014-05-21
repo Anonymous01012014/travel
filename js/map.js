@@ -63,7 +63,7 @@ function addStationToMap(map , stations)
 					var pinColor = 'FFFF00';
 					var pinIcon = new google.maps.MarkerImage(
 						//"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|4EC23D",
-						window.location.protocol+"//"+window.location.host + "/travel/images/google_marker/number_"+i+".png",
+						window.location.protocol+"//"+window.location.host + "/travel_time/images/google_marker/number_"+i+".png",
 						null,null,null,new google.maps.Size(30, 30)
 									);
 						
@@ -123,7 +123,7 @@ function showHighwayInfo(highway_id)
 	  type: "post",
 	  async: false,
       cache: false,			  
-	  url: window.location.protocol + "//" + window.location.host +  "/travel/dashboard/ajaxGetTravelTimeByHighway",
+	  url: window.location.protocol + "//" + window.location.host +  "/travel_time/dashboard/ajaxGetTravelTimeByHighway",
 	  data: {highway_id : highway_id},
 	  success: function(data){	
 	  	

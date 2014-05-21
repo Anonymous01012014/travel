@@ -45,7 +45,7 @@ class Main extends CI_Controller {
 	public function receiveMessage($msg)
 	{
 		$this->message = $msg.PHP_EOL;
-		return parseMessage();
+		return $this->parseMessage();
 	}
 	
 	/**
@@ -60,42 +60,51 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function parseMessage(){
+		//echo "<br /> ".$this->message;
 		//parse message
 		$this->message = urldecode($this->message);
+		//echo "<br /> ".$this->message;
+		//echo $this->message;
 		//decode the message from json to php object
-		$this->message = json_decode($message);
+		$this->message = json_decode($this->message);
 		//define the type of the message 
 		if ($this->message->msg_type == 1)//first deployment message(Registeration message)
 		{
 			if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
 				return $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
 			}else{
-				return "message type doesn't match its content!";
+				echo "message type doesn't match its content!";
+				return;
 			}
 		}
 		else if($this->message->msg_type == 2)//single detection message
 		{
 			if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
+				//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
 				return $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
 			}else{
-				return "message type doesn't match its content!";
+				echo "message type doesn't match its content!";
+				return;
 			}
 		}
 		else if($this->message->msg_type == 3)//multiple detections message
 		{
-			if(isset($this->message->dev_mutilap)){
-				foreach($this->message->dev_mutilap as $detection){//add all the detections to the database
-					$returned_value = $this->newPass($this->message->station_id,$detection->mac_address,$detection->time);
+			if(isset($this->message->dev_multilap)){
+				foreach($this->message->dev_multilap as $detection){//add all the detections to the database
+					$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
 					if($returned_value != "valid"){
-						return "invalid message values!!";
+						echo "invalid message values!!";
+						return;
 					}
 				}
-				return "valid";
+				echo "valid";
+				return;
 			}else{
-				return "message type doesn't match its content!";
+				echo "message type doesn't match its content!";
+				return;
 			}
 		}else{
-			return "Invalid message type!";
+			echo "Invalid message type!";
 		}
 	}
 	
@@ -116,6 +125,7 @@ class Main extends CI_Controller {
 		$this->load->model("station_model");
 		//fill the fields of the model
 		$this->station_model->id = $id;
+		//echo "\n".$this->station_model->CONNECTED . "\n";
 		$this->station_model->status = $this->station_model->CONNECTED;
 		//execute the change status function
 		$this->station_model->changeStationStatus();
@@ -152,8 +162,6 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function checkStation($station_ID){
-		//parse message
-		$msg = urldecode($msg);
 		//getting the station id from the message
 		
 		//loading station model
@@ -165,10 +173,11 @@ class Main extends CI_Controller {
 		if(isset($station[0])){
 			//if the station was found set the station status to connected and return its id
 			$this->connectStation($station[0]['id']);
-			return $station[0]['id'];
+			echo $station[0]['id'];
+			return;
 		}
 		// else return 0
-		return 0;
+		echo 0;
 	}
 	
 	/**
@@ -228,9 +237,10 @@ class Main extends CI_Controller {
 			/* recalculate highways beginning and ending stations */
 			$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 		}catch(Exception $e){
-			return "could not add the new station to the database because of : \n".$e->getMessage();
+			echo "could not add the new station to the database because of : \n".$e->getMessage();
+			return ;
 		}
-		return "valid";
+		echo "valid";
 	}
 	
 	
@@ -286,7 +296,7 @@ class Main extends CI_Controller {
 			//setting the origin and destinations of google's distance matrix request
 			$order = 0;
 			foreach($stations as $station){
-				echo $station['id'] . " ".$station_id;
+				//echo $station['id'] . " ".$station_id;
 				if($station['id'] == $station_id){
 					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
@@ -309,13 +319,13 @@ class Main extends CI_Controller {
 				//loading the curl helper
 				$this->load->helper("curl_helper"); 
 				//forming the url to be sent
-				var_dump($origin);
+				//var_dump($origin);
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				echo $url;
+				//echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
-				echo $body;
+				//echo $body;
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
 				foreach($decoded->rows[0]->elements as $element){
@@ -579,9 +589,13 @@ class Main extends CI_Controller {
 		if(isset($station[0])){
 			//check if this traveller exists in the database
 			$traveller = $this->checkTraveller($mac);
-			if(!$traveller){//if the traveller not founf in the database
+			if(!$traveller){
+				/* *
+				 * if the traveller not found in the database
+				 * just add the new traveller and the new passing at the specified station
+				 * */
 				//echo 1;
-				//adding new traveller if not existed or get the mac record id 
+				//adding the new traveller to database
 				$traveller_id =$this->addTraveller($mac);
 				
 				//prepare fields to add a new pass
@@ -589,7 +603,8 @@ class Main extends CI_Controller {
 				$this->passing_model->traveller_id=$traveller_id;
 				$this->passing_model->station_id=$station[0]['id'];
 				$pass_to=$this->passing_model->addPassing();
-			}else{//if the traveller already exists in the database
+			}else{
+				//if the traveller already exists in the database
 				//echo 2;
 				$traveller_id = $traveller['id'];
 				//get the last passing for this traveller 
@@ -601,9 +616,14 @@ class Main extends CI_Controller {
 				{
 					$pass_from_time = strtotime($pass_from[0]['passing_time']);//getting the pass from time
 					$pass_to_time = strtotime($passing_time);//getting the pass to time
-					
+					//echo "<br/>".$pass_from_time."||".$pass_to_time."<br />";
 					//if the pass to happened after the pass from then this is a valid pass timing
-					if($pass_from_time < $pass_from_time){
+					if($pass_from_time < $pass_to_time){
+						/* *
+						 * If the new passing was the latest pass for this traveller in the database 
+						 * just add the pass and add atravel from the previous pass to this pass
+						 * */
+						//echo 3 . "<br />";
 						//prepare fields to add a new pass
 						$this->passing_model->passing_time=$passing_time;
 						$this->passing_model->traveller_id=$traveller_id;
@@ -615,7 +635,7 @@ class Main extends CI_Controller {
 							$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
 						}
 					}else{//if the new pass happened before the latest added pass
-						/**
+						/* *
 						 * if the new pass happened before the latest added pass we do the following:
 						 * 1- we check if the new pass is added before.
 						 * 2- if not we find the passings before and after this passing.
@@ -623,7 +643,7 @@ class Main extends CI_Controller {
 						 * 4- we add a travel from the previous passing to the new passing and a travel from the
 						 * 	  new passing to the next passing.
 						 * */
-						 
+						 //echo 4 . "<br />";
 						 //check if this passing is already added
 						$this->passing_model->station_id=$station[0]['id'];
 						$this->passing_model->passing_time=$passing_time;
@@ -636,34 +656,42 @@ class Main extends CI_Controller {
 							$this->passing_model->station_id=$station[0]['id'];
 							
 							$pass_to=$this->passing_model->addPassing();
-							
+							//echo $pass_to. "<br />";
 							//set the model's passing time 
 							$this->passing_model->passing_time = $passing_time;
+							//set the model's traveller id
+							$this->passing_model->traveller_id = $traveller_id;
 							//get the pass previous to the new pass
 							$previous = $this->passing_model->getPreviousPassing();
 							//get the pass after to the new pass
 							$next = $this->passing_model->getNextPassing();
-							if(isset($previous[0]) && isset($next[0])){
-								//delete the travel from the previous passing to the next passing if it was found
-								//load travel model
-								$this->load->model("travel_model");
-								//fill model fields
-								$this->travel_model->passing_from = $previous[0]["id"]; 
-								$this->travel_model->passing_to = $next[0]["id"]; 
-								
-								//get the travel
-								$travel = $this->travel_model->getTravelByPassings();
-								//if the travel exists
-								if(isset($travel[0])){
-									//set the id field in the model
-									$this->travel_model->id = $travel[0]["id"];
-									//delete the travel
-									$this->travel_model->deleteTravel();
+							//echo "next: ".$next[0]["id"]. "<br />";
+							//echo "previous: ".$previous[0]["id"]. "<br />";
+							//if there is ap passing that happened before this passing
+							if(isset($previous[0])){
+								//if there is ap passing that happened after this passing
+								if(isset($next[0])){
+									//delete the travel from the previous passing to the next passing if it was found
+									//load travel model
+									$this->load->model("travel_model");
+									//fill model fields
+									$this->travel_model->passing_from = $previous[0]["id"]; 
+									$this->travel_model->passing_to = $next[0]["id"]; 
+									
+									//get the travel
+									$travel = $this->travel_model->getTravelByPassings();
+									//if the travel exists
+									if(isset($travel[0])){
+										//set the id field in the model
+										$this->travel_model->id = $travel[0]["id"];
+										//delete the travel
+										$this->travel_model->deleteTravel();
+									}
+									//add a travel from the previous passing to the new passing
+									$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
+									//add a travel from the new passing to the next passing
+									$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
 								}
-								//add a travel from the previous passing to the new passing
-								$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
-								//add a travel from the new passing to the next passing
-								$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
 							}
 						}
 					}
@@ -671,7 +699,8 @@ class Main extends CI_Controller {
 			}
 		}
 		}catch(Exception $e){
-			return "couldn't add new pass to the database because of : \n".$e->getMessage();
+			echo "couldn't add new pass to the database because of : \n".$e->getMessage()."\n";
+			return;
 		}
 		return "valid";
 	}

@@ -46,8 +46,8 @@ class Station_model extends CI_Model{
 	
 	
 	/* Station states */
-	const CONNECTED = 1;
-	const DISCONNECTED = 2;
+	var $CONNECTED = 1;
+	var $DISCONNECTED = 2;
 	
 	/**
      * Constructor
