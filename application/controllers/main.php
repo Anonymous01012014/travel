@@ -81,7 +81,14 @@ class Main extends CI_Controller {
 		{
 			if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
 				//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
-				return $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
+				$returned_value = $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
+				if($returned_value != "valid"){
+					echo "invalid message values!!";
+					return;
+				}else{
+					echo "valid";
+					return;
+				}
 			}else{
 				echo "message type doesn't match its content!";
 				return;
