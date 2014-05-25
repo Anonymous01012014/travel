@@ -91,6 +91,7 @@ class Main extends CI_Controller {
 		{
 			if(isset($this->message->dev_multilap)){
 				foreach($this->message->dev_multilap as $detection){//add all the detections to the database
+					//echo $detection->dev_lap."::".$detection->dev_time;
 					$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
 					if($returned_value != "valid"){
 						echo "invalid message values!!";
@@ -724,7 +725,7 @@ class Main extends CI_Controller {
 			echo "couldn't add new pass to the database because of : \n".$e->getMessage()."\n";
 			return;
 		}
-		echo "valid";
+		return "valid";
 	}
 	
 	
