@@ -223,7 +223,10 @@ class Main extends CI_Controller {
 			
 			//execute station adding function
 			$this->station_model->startStation();
+			
 			//getting the station id
+			$this->station_model->station_ID = $station_ID;
+			
 			$station_id = $this->station_model->getStationByStationID();
 			$station_id = $station_id[0]['id'];
 			
