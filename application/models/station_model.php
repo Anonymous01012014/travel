@@ -115,13 +115,13 @@ class Station_model extends CI_Model{
 	 public function startStation(){
 		$query = "UPDATE station
 				  SET
-					station_ID = {$this->station_ID},
+					station_ID = '{$this->station_ID}',
 					longitude = {$this->longitude},
 					latitude = {$this->latitude},
 					status = {$this->status},		
 					start_date = CAST(GETDATE() AS DATE),		
 					highway_id = {$this->highway_id}		
-	 			  WHERE station_ID = {$this->station_ID}";
+	 			  WHERE station_ID like '{$this->station_ID}'";
 		$this->db->query($query);
 		return true;
 	 }
@@ -160,7 +160,7 @@ class Station_model extends CI_Model{
 	 public function modifyStation(){
 		$query = "UPDATE station
 				  SET
-					station_ID = {$this->station_ID},
+					station_ID = '{$this->station_ID}',
 					longitude = {$this->longitude},
 					latitude = {$this->latitude},
 					status = {$this->status},		
