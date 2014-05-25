@@ -282,7 +282,12 @@ class Main extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations){
+	 public function findStationNeighbors($station_id,$highway,$highway_id){
+		
+		$this->load->model("station_model");
+		//get all of the highway's stations
+			$this->station_model->highway_id = $highway_id;
+			$stations = $this->station_model->getStationsbyHighway();
 		
 		 //if the new station is not the first one
 		if($highway){
@@ -300,6 +305,7 @@ class Main extends CI_Controller {
 			$order = 0;
 			foreach($stations as $station){
 				//echo $station['id'] . " ".$station_id;
+				//echo $station['id']."::".$station_id."<br/>";
 				if($station['id'] == $station_id){
 					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
@@ -334,15 +340,16 @@ class Main extends CI_Controller {
 				foreach($decoded->rows[0]->elements as $element){
 					$distances[] = $element->distance->value;
 				}
+				//var_dump($distances);
 				//finding the nearest station's index in forward direction
 				$nearest = array_keys($distances, min($distances));
 				//take the first index
 				$nearest = $nearest[0];
+				//echo $nearest;
 				
 				//getting the backward(from all the other stations to the new station) distances
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				//echo $url;
-				// send the request and get the response body
+				//// send the request and get the response body
 				$body = send_request($url);
 				//echo $body;
 				//decode the json encoded body
@@ -351,9 +358,11 @@ class Main extends CI_Controller {
 				foreach($decoded->rows as $row){
 					$distances_back[] = $row->elements[0]->distance->value;
 				}
+				//var_dump($distances_back);
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
+				//echo $nearest_back;
 				//if this is the second station to be added to the highway
 				if(count($stations) == 2){
 					//add each of the stations as a neighbor to the other one
@@ -369,10 +378,19 @@ class Main extends CI_Controller {
 					
 					$this->neighbor_model->addNeighbor();
 				}else if(count($stations) > 2){
-					//We consider that the nearest station is a neighbor
-					$neighbors[] = $nearest; 
-					//get the neighbors of the nearest station
-					$this->neighbor_model->station_id = $stations[$nearest]['id'];
+					//find out the nearest neighbor
+					if($distances[$nearest] <= $distances_back[$nearest_back]){
+						//if the distance from the nearest in the foreward direction is lesser than the distance from the nearest neighbor in the back direction
+						//we consider the nearest station as a neighbor
+						$neighbors[] = $nearest; 
+						//get the neighbors of the nearest station
+						$this->neighbor_model->station_id = $stations[$nearest]['id'];
+					}else{//if the back neighbor is nearer than the foreward neighbor
+						//we consider the nearest station as a neighbor
+						$neighbors[] = $nearest_back; 
+						//get the neighbors of the nearest station
+						$this->neighbor_model->station_id = $stations[$nearest_back]['id'];
+					}
 					
 					$n_neighbors = $this->neighbor_model->getNeighborsByStationId();
 					//get the other neighbor of the new station
@@ -409,6 +427,7 @@ class Main extends CI_Controller {
 					
 					//adding the neighbors relationships for the new station
 					foreach($neighbors as $neighbor){
+						//echo "neighbors: <br /> neighbor[".$neighbor."] = ".$stations[$neighbor]['id'];
 						//add each of the stations as a neighbor to the other one
 						$this->neighbor_model->station_id = $stations[$neighbor]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $station_id;//the new station
