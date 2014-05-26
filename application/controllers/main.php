@@ -575,12 +575,16 @@ class Main extends CI_Controller {
 		//get the highway name froimthe decoded body
 		if(isset($code->streetSegment->ref)){
 			$highway = $code->streetSegment->ref;
+		}else if(isset($code->streetSegment->name)){
+			$highway = $code->streetSegment->name;
 		}else if(isset($code->streetSegment[0]->ref)){
 			$highway = $code->streetSegment[0]->ref;
 		}else if(isset($code->streetSegment->name)){
 			$highway = $code->streetSegment->name;
 		}else if(isset($code->streetSegment[0]->name)){
 			$highway = $code->streetSegment[0]->name;
+		}else{
+			
 		}
 		$highway_fragments = explode(';',$highway);
 		
