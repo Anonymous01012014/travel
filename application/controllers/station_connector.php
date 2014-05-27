@@ -94,7 +94,7 @@
 								$from->station_id = $station_exists * 1;
 								
 								//send the message to the station controller to be parsed and executed
-								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
+								$result = shell_exec("php index.php main receiveMessage ".$msg." ");
 								
 								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
@@ -129,7 +129,7 @@
 							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
 							
 							//send the message to the station controller to be parsed
-							$result = shell_exec("php index.php main receiveMessage ".$msg." &");
+							$result = shell_exec("php index.php main receiveMessage ".$msg." ");
 							//if the result came back from the execution == valid then acknoledge the 
 							//message else just return the error message
 							//echo "\n".$result."\n";
