@@ -86,9 +86,8 @@ class Main extends CI_Controller {
 				$this->station_model->station_ID = $this->message->station_id;
 				//getting the station specified by the station_ID from the database
 				$station = $this->station_model->getStationByStationID();
-				var_dump($station);
 				//check if the station is registered in the database using the highway id field
-				if($station[0]->highway_id != "" && $station[0]->highway_id != null){//if the highway_id field has a value then the station is registerd in the database
+				if($station[0]['highway_id'] != "" && $station[0]['highway_id'] != null){//if the highway_id field has a value then the station is registerd in the database
 					 if($this->message->msg_type == 2)//single detection message
 					{
 						if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
