@@ -60,59 +60,76 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function parseMessage(){
-		//echo "<br /> ".$this->message;
-		//parse message
-		$this->message = urldecode($this->message);
-		//echo "<br /> ".$this->message;
-		//echo $this->message;
-		//decode the message from json to php object
-		$this->message = json_decode($this->message);
-		//define the type of the message 
-		if ($this->message->msg_type == 1)//first deployment message(Registeration message)
-		{
-			if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
-				return $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
-			}else{
-				echo "message type doesn't match its content!";
-				return;
-			}
-		}
-		else if($this->message->msg_type == 2)//single detection message
-		{
-			if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
-				//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
-				$returned_value = $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
-				if($returned_value != "valid"){
-					echo "invalid message values!!";
-					return;
-				}else{
-					echo "valid";
+		try{
+			//echo "<br /> ".$this->message;
+			//parse message
+			$this->message = urldecode($this->message);
+			//echo "<br /> ".$this->message;
+			//echo $this->message;
+			//decode the message from json to php object
+			$this->message = json_decode($this->message);
+			//define the type of the message 
+			if ($this->message->msg_type == 1)//first deployment message(Registeration message)
+			{
+				if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
+					return $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+				}else{//if the message didn't have the expected fields return this error message
+					echo "message type doesn't match its content!";
 					return;
 				}
 			}else{
-				echo "message type doesn't match its content!";
-				return;
-			}
-		}
-		else if($this->message->msg_type == 3)//multiple detections message
-		{
-			if(isset($this->message->dev_multilap)){
-				foreach($this->message->dev_multilap as $detection){//add all the detections to the database
-					//echo $detection->dev_lap."::".$detection->dev_time;
-					$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
-					if($returned_value != "valid"){
-						echo "invalid message values!!";
-						return;
+				//get the highway of the sending station
+				//loading the station model
+				$this->load->model("station_model");
+				//filling the required fields
+				$this->station_model->station_ID = $this->message->station_ID;
+				//getting the station specified by the station_ID from the database
+				$station = $this->station_model->getStationByStationID();
+				//check if the station is registered in the database using the highway id field
+				if($station->highway_id != "" && $station->highway_id != null){//if the highway_id field has a value then the station is registerd in the database
+					 if($this->message->msg_type == 2)//single detection message
+					{
+						if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
+							//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
+							$returned_value = $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
+							if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
+								echo "Error while adding new pass.";
+								return;
+							}else{
+								echo "valid";
+								return;
+							}
+						}else{//if the message didn't have the expected fields return this error message
+							echo "message type doesn't match its content!";
+							return;
+						}
 					}
+					else if($this->message->msg_type == 3)//multiple detections message
+					{
+						if(isset($this->message->dev_multilap)){
+							foreach($this->message->dev_multilap as $detection){//add all the detections to the database
+								//echo $detection->dev_lap."::".$detection->dev_time;
+								$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
+								if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
+									echo "Error while adding new pass.";
+									return;
+								}
+							}
+							echo "valid";
+							return;
+						}else{//if the message didn't have the expected fields return this error message
+							echo "message type doesn't match its content!";
+							return;
+						}
+					}else{//if the mesdsage type didn't match any of the previously specified types return this error message
+						echo "Invalid message type!";
+					}
+				}else{//if the highway_id is not registered in the database send error message
+					echo "This station isn't registered in the database. Please send the registeration message first.";				
 				}
-				echo "valid";
-				return;
-			}else{
-				echo "message type doesn't match its content!";
-				return;
 			}
-		}else{
-			echo "Invalid message type!";
+		}catch(Exception $e){
+			echo "The following error happened wihle parsing the received message: \n ".$e->getMessage();
 		}
 	}
 	
@@ -587,11 +604,12 @@ class Main extends CI_Controller {
 		}else if(isset($code->streetSegment[0]->name)){
 			$highway = $code->streetSegment[0]->name;
 		}
+		//if the highway of the given lat,long was found return its name
 		if(isset($highway)){
 			$highway_fragments = explode(';',$highway);
 			
 			return $highway_fragments[count($highway_fragments) - 1];
-		}else{
+		}else{//else return false
 			return false;
 		}
 	}
