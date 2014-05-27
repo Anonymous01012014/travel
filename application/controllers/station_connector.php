@@ -84,7 +84,7 @@
 							$station_ID = $decoded_msg->station_id;
 							echo "\n".$station_ID."\n";
 							//check this station existence in the database
-							$station_exists = exec("php index.php main checkStation ".$station_ID." ");
+							$station_exists = shell_exec("php index.php main checkStation ".$station_ID." &");
 							echo "\n".$station_exists."\n";
 							//if the returned station id > 0 then the station was found
 							if($station_exists > 0){
@@ -94,7 +94,7 @@
 								$from->station_id = $station_exists * 1;
 								
 								//send the message to the station controller to be parsed and executed
-								$result = exec("php index.php main receiveMessage ".$msg." ");
+								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 								
 								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
@@ -129,7 +129,7 @@
 							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
 							
 							//send the message to the station controller to be parsed
-							$result = exec("php index.php main receiveMessage ".$msg." ");
+							$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 							//if the result came back from the execution == valid then acknoledge the 
 							//message else just return the error message
 							//echo "\n".$result."\n";
@@ -193,7 +193,7 @@
 		public function onClose(ConnectionInterface $conn) {
 			//if the connecion had a station id field disconnect the station
 			if(isset($conn->station_id)){
-				exec("php index.php message discoonectStation ".$conn->station_id." ");
+				shell_exec("php index.php message discoonectStation ".$conn->station_id." &");
 			}
 			// The connection is closed, remove it, as we can no longer send it messages
 			$this->clients->detach($conn);
