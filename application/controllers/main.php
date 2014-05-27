@@ -82,6 +82,7 @@ class Main extends CI_Controller {
 				//loading the station model
 				$this->load->model("station_model");
 				//filling the required fields
+				echo "\n".$this->message->station_id . "\n";
 				$this->station_model->station_ID = $this->message->station_id;
 				//getting the station specified by the station_ID from the database
 				$station = $this->station_model->getStationByStationID();
