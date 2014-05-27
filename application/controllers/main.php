@@ -82,7 +82,7 @@ class Main extends CI_Controller {
 				//loading the station model
 				$this->load->model("station_model");
 				//filling the required fields
-				$this->station_model->station_ID = $this->message->station_ID;
+				$this->station_model->station_ID = $this->message->station_id;
 				//getting the station specified by the station_ID from the database
 				$station = $this->station_model->getStationByStationID();
 				//check if the station is registered in the database using the highway id field
