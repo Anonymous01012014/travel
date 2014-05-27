@@ -208,45 +208,50 @@ class Main extends CI_Controller {
 		try{
 			//get the highway of the station
 			$highway_name = $this->findoutHighway($long,$lat);
-			//check if this highway is in the database
-			$highway = $this->checkHighway($highway_name);
-			if(!$highway){
-				//if it doesn't exist add it
-				//load the model
-				$this->load->model("highway_model");
-				//fill the model fields 
-				$this->highway_model->name = $highway_name;
+			if($highway_name){
+				//check if this highway is in the database
+				$highway = $this->checkHighway($highway_name);
+				if(!$highway){
+					//if it doesn't exist add it
+					//load the model
+					$this->load->model("highway_model");
+					//fill the model fields 
+					$this->highway_model->name = $highway_name;
+					
+					//execute the addition function and get its id
+					$highway_id = $this->highway_model->addHighway();
+				}else{
+					$highway_id = $highway['id']; 
+				}
+				//filling the model fields
+				$this->station_model->station_ID = $station_ID;
+				$this->station_model->longitude = $long;
+				$this->station_model->latitude = $lat;
+				$this->station_model->status = $this->station_model->CONNECTED;
+				$this->station_model->highway_id = $highway_id;
 				
-				//execute the addition function and get its id
-				$highway_id = $this->highway_model->addHighway();
+				//execute station adding function
+				$this->station_model->startStation();
+				
+				//getting the station id
+				$this->station_model->station_ID = $station_ID;
+				
+				$station_id = $this->station_model->getStationByStationID();
+				$station_id = $station_id[0]['id'];
+				
+				//get all of the highway's stations
+				$this->station_model->highway_id = $highway_id;
+				$highway_stations = $this->station_model->getStationsbyHighway();
+				
+				/* finding and adding the new station's neighbors */
+				$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
+					
+				/* recalculate highways beginning and ending stations */
+				$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 			}else{
-				$highway_id = $highway['id']; 
+				echo "Could not get the highway name from the given long,lat";
+				return;
 			}
-			//filling the model fields
-			$this->station_model->station_ID = $station_ID;
-			$this->station_model->longitude = $long;
-			$this->station_model->latitude = $lat;
-			$this->station_model->status = $this->station_model->CONNECTED;
-			$this->station_model->highway_id = $highway_id;
-			
-			//execute station adding function
-			$this->station_model->startStation();
-			
-			//getting the station id
-			$this->station_model->station_ID = $station_ID;
-			
-			$station_id = $this->station_model->getStationByStationID();
-			$station_id = $station_id[0]['id'];
-			
-			//get all of the highway's stations
-			$this->station_model->highway_id = $highway_id;
-			$highway_stations = $this->station_model->getStationsbyHighway();
-			
-			/* finding and adding the new station's neighbors */
-			$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
-				
-			/* recalculate highways beginning and ending stations */
-			$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 		}catch(Exception $e){
 			echo "could not add the new station to the database because of : \n".$e->getMessage();
 			return ;
@@ -575,20 +580,20 @@ class Main extends CI_Controller {
 		//get the highway name froimthe decoded body
 		if(isset($code->streetSegment->ref)){
 			$highway = $code->streetSegment->ref;
-		}else if(isset($code->streetSegment->name)){
-			$highway = $code->streetSegment->name;
 		}else if(isset($code->streetSegment[0]->ref)){
 			$highway = $code->streetSegment[0]->ref;
 		}else if(isset($code->streetSegment->name)){
 			$highway = $code->streetSegment->name;
 		}else if(isset($code->streetSegment[0]->name)){
 			$highway = $code->streetSegment[0]->name;
-		}else{
-			
 		}
-		$highway_fragments = explode(';',$highway);
-		
-		return $highway_fragments[count($highway_fragments) - 1];
+		if(isset($highway)){
+			$highway_fragments = explode(';',$highway);
+			
+			return $highway_fragments[count($highway_fragments) - 1];
+		}else{
+			return false;
+		}
 	}
 	
 	/* End of Highway Section*/
