@@ -37,6 +37,8 @@ class Main extends CI_Controller {
 	 * this function receives the sent message and stores it in the message 
 	 * local variable. then calls parse function.
 	 * 
+	 * Parameters:
+	 * $msg: The received message to be parsed.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -45,7 +47,7 @@ class Main extends CI_Controller {
 	public function receiveMessage($msg)
 	{
 		$this->message = $msg.PHP_EOL;
-		parseMessage();
+		return $this->parseMessage();
 	}
 	
 	/**
@@ -60,24 +62,80 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function parseMessage(){
-		//parse message
-		$this->message = urldecode($this->message);
-		//decode the message from json to php object
-		$this->message = json_decode($message);
-		//define the type of the message 
-		if ($this->message->message_type == 1)//first deployment message
-		{
-			$this->newStation($this->message->station_ID,$this->message->longitude,$this->message->latitiude);
-		}
-		else if($this->message->message_type == 2)//single detection message
-		{
-			$this->newPass($this->message->station_ID,$this->message->mac_address$this->message->time);
-		}
-		else if($this->message->message_type == 3)//multiple detections message
-		{
-			foreach($this->message->detections as $detection){//add all the detections to the database
-				$this->newPass($this->message->station_ID,$detection->mac_address,$detection->time);
+			$this->load->helper("message_helper");
+		try{
+			//echo "<br /> ".$this->message;
+			//parse message
+			$this->message = urldecode($this->message);
+			//echo "<br /> ".$this->message;
+			//echo $this->message;
+			//decode the message from json to php object
+			$this->message = json_decode($this->message);
+			//define the type of the message 
+			if ($this->message->msg_type == 1)//first deployment message(Registeration message)
+			{
+				if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
+					$result = $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+					echo $result;
+					return;
+				}else{//if the message didn't have the expected fields return this error message
+					echo MESSAGE_TYPE_CONTENT_MISMATCH;
+					return;
+				}
+			}else{
+				//get the highway of the sending station
+				//loading the station model
+				$this->load->model("station_model");
+				//filling the required fields
+				
+				$this->station_model->station_ID = $this->message->station_id;
+				//getting the station specified by the station_ID from the database
+				$station = $this->station_model->getStationByStationID();
+				//check if the station is registered in the database using the highway id field
+				if($station[0]['highway_id'] != "" && $station[0]['highway_id'] != null){//if the highway_id field has a value then the station is registerd in the database
+					 if($this->message->msg_type == 2)//single detection message
+					{
+						if(isset($this->message->dev_lap) && isset($this->message->dev_time)){
+							//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
+							$returned_value = $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
+							if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
+								echo PASS_ADDING_ERROR;
+								return;
+							}else{
+								echo SUCCESS;
+								return;
+							}
+						}else{//if the message didn't have the expected fields return this error message
+							echo MESSAGE_TYPE_CONTENT_MISMATCH;
+							return;
+						}
+					}
+					else if($this->message->msg_type == 3)//multiple detections message
+					{
+						if(isset($this->message->dev_multilap)){
+							foreach($this->message->dev_multilap as $detection){//add all the detections to the database
+								//echo $detection->dev_lap."::".$detection->dev_time;
+								$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
+								if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
+									echo PASS_ADDING_ERROR;
+									return;
+								}
+							}
+							echo SUCCESS;
+							return;
+						}else{//if the message didn't have the expected fields return this error message
+							echo MESSAGE_TYPE_CONTENT_MISMATCH;
+							return;
+						}
+					}else{//if the mesdsage type didn't match any of the previously specified types return this error message
+						echo MESSAGE_TYPE_ERROR;
+					}
+				}else{//if the highway_id is not registered in the database send error message
+					echo NOT_REGISTERED;				
+				}
 			}
+		}catch(Exception $e){
+			echo MESSAGE_PARSING_ERROR; //"The following error happened wihle parsing the received message: \n ".$e->getMessage();
 		}
 	}
 	
@@ -89,6 +147,8 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This method changes the status of the station to connected in the database.
 	 * 
+	 * Parameters:
+	 * $id: the id of the station that connected.
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
@@ -98,6 +158,7 @@ class Main extends CI_Controller {
 		$this->load->model("station_model");
 		//fill the fields of the model
 		$this->station_model->id = $id;
+		//echo "\n".$this->station_model->CONNECTED . "\n";
 		$this->station_model->status = $this->station_model->CONNECTED;
 		//execute the change status function
 		$this->station_model->changeStationStatus();
@@ -109,11 +170,14 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This method changes the status of the station to disconnected in the database.
 	 * 
+	 * Parameters:
+	 * $id: The id of the station that disconnected.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function connectStation($id){
+	public function disconnectStation($id){
 		//load the stataion model
 		$this->load->model("station_model");
 		//fill the fields of the model
@@ -129,13 +193,14 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function checks if the station exists in the database.
 	 * 
+	 * Parameters:
+	 * $station_ID: The identification alpha-numeric code that we want to check its availability in the database.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
 	public function checkStation($station_ID){
-		//parse message
-		$msg = urldecode($msg);
 		//getting the station id from the message
 		
 		//loading station model
@@ -147,10 +212,11 @@ class Main extends CI_Controller {
 		if(isset($station[0])){
 			//if the station was found set the station status to connected and return its id
 			$this->connectStation($station[0]['id']);
-			return $station[0]['id'];
+			echo $station[0]['id'];
+			return;
 		}
 		// else return 0
-		return 0;
+		echo 0;
 	}
 	
 	/**
@@ -159,54 +225,72 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function adds new station to the database.
 	 * 
+	 * Parameters:
+	 * $station_ID: The identification alpha-numeric code of the station that will be added to the database.
+	 * $lat: the GPS latitude of the new station.
+	 * $long: the GPS longitude of the new station.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
 	public function newStation($station_ID,$long,$lat){
+		
 		//loading station model
 		$this->load->model('station_model');
 		//id of the highway
 		$highway_id = 0;
 		/* getting the station's highway id */
-		//get the highway of the station
-		$highway_name = $this->findoutHighway($long,$lat);
-		//check if this highway is in the database
-		$highway = $this->checkHighway($highway_name);
-		if(!$highway){
-			//if it doesn't exist add it
-			//load the model
-			$this->load->model("highway_model");
-			//fill the model fields 
-			$this->highway_model->name = $highway_name;
-			
-			//execute the addition function and get its id
-			$highway_id = $this->highway_model->addHighway();
-		}else{
-			$highway_id = $highway['id']; 
+		try{
+			//get the highway of the station
+			$highway_name = $this->findoutHighway($long,$lat);
+			if($highway_name){
+				//check if this highway is in the database
+				$highway = $this->checkHighway($highway_name);
+				if(!$highway){
+					//if it doesn't exist add it
+					//load the model
+					$this->load->model("highway_model");
+					//fill the model fields 
+					$this->highway_model->name = $highway_name;
+					
+					//execute the addition function and get its id
+					$highway_id = $this->highway_model->addHighway();
+				}else{
+					$highway_id = $highway['id']; 
+				}
+				//filling the model fields
+				$this->station_model->station_ID = $station_ID;
+				$this->station_model->longitude = $long;
+				$this->station_model->latitude = $lat;
+				$this->station_model->status = $this->station_model->CONNECTED;
+				$this->station_model->highway_id = $highway_id;
+				
+				//execute station adding function
+				$this->station_model->startStation();
+				
+				//getting the station id
+				$this->station_model->station_ID = $station_ID;
+				
+				$station_id = $this->station_model->getStationByStationID();
+				$station_id = $station_id[0]['id'];
+				
+				//get all of the highway's stations
+				$this->station_model->highway_id = $highway_id;
+				$highway_stations = $this->station_model->getStationsbyHighway();
+				
+				/* finding and adding the new station's neighbors */
+				$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
+					
+				/* recalculate highways beginning and ending stations */
+				$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
+			}else{
+				return HIGHWAY_NOT_FOUND;
+			}
+		}catch(Exception $e){
+			return STATION_REGITRATION_ERROR;//"could not add the new station to the database because of : \n".$e->getMessage();
 		}
-		//filling the model fields
-		$this->station_model->station_ID = $station_ID;
-		$this->station_model->longitude = $long;
-		$this->station_model->latitude = $lat;
-		$this->station_model->status = $this->station_model->CONNECTED;
-		$this->station_model->highway_id = $highway_id;
-		
-		//execute station adding function
-		$this->station_model->startStation();
-		//getting the station id
-		$station_id = $this->station_model->getStationByStationID();
-		$station_id = $station_id[0]['id'];
-		
-		//get all of the highway's stations
-		$this->station_model->highway_id = $highway_id;
-		$highway_stations = $this->station_model->getStationsbyHighway();
-		
-		/* finding and adding the new station's neighbors */
-		$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
-			
-		/* recalculate highways beginning and ending stations */
-		$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
+		return SUCCESS;
 	}
 	
 	
@@ -215,7 +299,6 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function finds and adds the new station's neighbors.
-	 * 
 	 * Algorithm of finding station neighbors:
 	 *	1- if this is the first station in the highway we do nothing.
 	 *	2- calculate the distances from the new station(call it N) to all the stations in the same highway.
@@ -237,17 +320,30 @@ class Main extends CI_Controller {
 	 *					2- add a new neighborhood relationship from N to A.
 	 *					3- add a new neighborhood relationship from A to N.
 	 *		
-	 *	remark: Highways are always two way so no need for one way processing.
-	 *					 
-	 *	important remark(B is neighbor to A <=> there is a flow from A to B)
+	 *	Remarks: 
+	 * 	. Highways are always two way so no need for one way processing.				 
+	 *	. B is neighbor to A <=> there is a flow from A to B.
+	 * 
+	 * Parameters:
+	 * $station_id: the id of the station in the database.
+	 * $highway: this variable contains a highway model object if the highway of this station was found in the database ,
+	 * 				OR
+	 * 			  It contains a false boolean value if the highway of this station wasn't in the database (it was newly added).
+	 * 			  It's used as a flag to know if the highway was already in the database or newly added. 
+	 * $highway_id : The id of the highway in the database.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	 public function findStationNeighbors($station_id,$highway,$highway_id,$stations){
+	 public function findStationNeighbors($station_id,$highway,$highway_id){
 		
-		 //if the new station is not the first one
+		$this->load->model("station_model");
+		//get all of the highway's stations
+			$this->station_model->highway_id = $highway_id;
+			$stations = $this->station_model->getStationsbyHighway();
+		
+		 //if the new station is not the first one in its highway
 		if($highway){
 			//echo 1;
 			//load the neighbor model
@@ -262,7 +358,8 @@ class Main extends CI_Controller {
 			//setting the origin and destinations of google's distance matrix request
 			$order = 0;
 			foreach($stations as $station){
-				echo $station['id'] . " ".$station_id;
+				//echo $station['id'] . " ".$station_id;
+				//echo $station['id']."::".$station_id."<br/>";
 				if($station['id'] == $station_id){
 					$origin = $station['latitude'].",".$station['longitude'];
 					$station_order = $order;
@@ -285,27 +382,28 @@ class Main extends CI_Controller {
 				//loading the curl helper
 				$this->load->helper("curl_helper"); 
 				//forming the url to be sent
-				var_dump($origin);
+				//var_dump($origin);
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$origin}&destinations={$destinations}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				echo $url;
+				//echo $url;
 				// send the request and get the response body
 				$body = send_request($url);
 				//decode the json encoded body
-				echo $body;
+				//echo $body;
 				$decoded = json_decode($body);
 				//extracting distances from the decoded object and put them in the distances array
 				foreach($decoded->rows[0]->elements as $element){
 					$distances[] = $element->distance->value;
 				}
+				//var_dump($distances);
 				//finding the nearest station's index in forward direction
 				$nearest = array_keys($distances, min($distances));
 				//take the first index
 				$nearest = $nearest[0];
+				//echo $nearest;
 				
 				//getting the backward(from all the other stations to the new station) distances
 				$url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={$destinations}&destinations={$origin}&sensor=false&mode=driving&key=AIzaSyCqJs3iw4UIvhFB2VXV3k4Nc79VlyMn_LA";
-				//echo $url;
-				// send the request and get the response body
+				//// send the request and get the response body
 				$body = send_request($url);
 				//echo $body;
 				//decode the json encoded body
@@ -314,9 +412,11 @@ class Main extends CI_Controller {
 				foreach($decoded->rows as $row){
 					$distances_back[] = $row->elements[0]->distance->value;
 				}
+				//var_dump($distances_back);
 				//finding the nearest station's index in backward direction
 				$nearest_back = array_keys($distances_back, min($distances_back));
 				$nearest_back = $nearest_back[0];
+				//echo $nearest_back;
 				//if this is the second station to be added to the highway
 				if(count($stations) == 2){
 					//add each of the stations as a neighbor to the other one
@@ -332,10 +432,19 @@ class Main extends CI_Controller {
 					
 					$this->neighbor_model->addNeighbor();
 				}else if(count($stations) > 2){
-					//We consider that the nearest station is a neighbor
-					$neighbors[] = $nearest; 
-					//get the neighbors of the nearest station
-					$this->neighbor_model->station_id = $stations[$nearest]['id'];
+					//find out the nearest neighbor
+					if($distances[$nearest] <= $distances_back[$nearest_back]){
+						//if the distance from the nearest in the foreward direction is lesser than the distance from the nearest neighbor in the back direction
+						//we consider the nearest station as a neighbor
+						$neighbors[] = $nearest; 
+						//get the neighbors of the nearest station
+						$this->neighbor_model->station_id = $stations[$nearest]['id'];
+					}else{//if the back neighbor is nearer than the foreward neighbor
+						//we consider the nearest station as a neighbor
+						$neighbors[] = $nearest_back; 
+						//get the neighbors of the nearest station
+						$this->neighbor_model->station_id = $stations[$nearest_back]['id'];
+					}
 					
 					$n_neighbors = $this->neighbor_model->getNeighborsByStationId();
 					//get the other neighbor of the new station
@@ -372,6 +481,7 @@ class Main extends CI_Controller {
 					
 					//adding the neighbors relationships for the new station
 					foreach($neighbors as $neighbor){
+						//echo "neighbors: <br /> neighbor[".$neighbor."] = ".$stations[$neighbor]['id'];
 						//add each of the stations as a neighbor to the other one
 						$this->neighbor_model->station_id = $stations[$neighbor]['id'];//the old station
 						$this->neighbor_model->neighbor_id = $station_id;//the new station
@@ -395,6 +505,13 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function returns the shorter distance from the given index in thwe two given distance array.
+	 * 
+	 * Parameters:
+	 * $foreward_distances: an array of the distances between the new station and other stations on 
+	 * 						the highway in the foreward direction (from the new station to the other stations).
+	 * $backwaord_distances: an array of the distances between the new station and other stations on 
+	 * 						 the highway in the backword direction (from the other stations to the new station).
+	 * $index: the index of the station we want to get the distance for in the previous arrays. 
 	 * 
 	 * created date: 03-05-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat*
@@ -421,16 +538,24 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function checks if the highway exists in the database.
 	 * 
+	 * Parameters:
+	 * $highway_name: The name of the highway that was returned from the web service. 
+	 * 
+	 * Return:
+	 * $highway object if it was found in the database .
+	 * OR
+	 * boolean false value.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function checkHighway($highway){
+	public function checkHighway($highway_name){
 		//loading station model
 		$this->load->model('highway_model');
 		
-		$this->highway_model->name = $highway;
-		//get the highway specified by the station_ID
+		$this->highway_model->name = $highway_name;
+		//get the highway specified by the its name
 		$highway = $this->highway_model->getHighwayByName();
 		if(isset($highway[0]))
 		//if the highway was found return its object
@@ -445,6 +570,14 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * determine the highway terminals.
+	 * 
+	 * Parameters:
+	 * $highway: this variable contains a highway model object if the highway of this station was found in the database ,
+	 * 				OR
+	 * 			  It contains a false boolean value if the highway of this station wasn't in the database (it was newly added).
+	 * 			  It's used as a flag to know if the highway was already in the database or newly added. 
+	 * $highway_id : The id of the highway in the database.
+	 * $stations: An array of the sations on the specified highway.
 	 * 
 	 * created date: 29-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -492,6 +625,10 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function finds out the high way in the given GPS long and lat.
 	 * 
+	 * Parameters:
+	 * $long: The GPS longitude of the station.
+	 * $lat: The GPS latitude of the station.
+	 * 
 	 * created date: 25-04-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
@@ -518,9 +655,14 @@ class Main extends CI_Controller {
 		}else if(isset($code->streetSegment[0]->name)){
 			$highway = $code->streetSegment[0]->name;
 		}
-		$highway_fragments = explode(';',$highway);
-		
-		return $highway_fragments[count($highway_fragments) - 1];
+		//if the highway of the given lat,long was found return its name
+		if(isset($highway)){
+			$highway_fragments = explode(';',$highway);
+			
+			return $highway_fragments[count($highway_fragments) - 1];
+		}else{//else return false
+			return false;
+		}
 	}
 	
 	/* End of Highway Section*/
@@ -535,116 +677,145 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function adds new passing  to the database.
 	 * 
+	 * Parameters:
+	 * $station_id: The station's unique alpha-numeric id.
+	 * $mac: mac adderss of the detected BT device.
+	 * $passing_time: A time stamp at which the BT device was detected.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
 	 */
 	public function newPass($station_id,$mac,$passing_time)
 	{
-		$passing_time = urldecode($passing_time);
-		//loading  passing model
-		$this->load->model("passing_model");
-		//getting the station from the database
-		$this->load->model("station_model");
-		
-		$this->station_model->station_ID = $station_id;
-		
-		$station = $this->station_model->getStationByStationID();
-		//if the station exists in the database
-		if(isset($station[0])){
-			//check if this traveller exists in the database
-			$traveller = $this->checkTraveller($mac);
-			if(!$traveller){//if the traveller not founf in the database
-				//echo 1;
-				//adding new traveller if not existed or get the mac record id 
-				$traveller_id =$this->addTraveller($mac);
-				
-				//prepare fields to add a new pass
-				$this->passing_model->passing_time=$passing_time;
-				$this->passing_model->traveller_id=$traveller_id;
-				$this->passing_model->station_id=$station[0]['id'];
-				$pass_to=$this->passing_model->addPassing();
-			}else{//if the traveller already exists in the database
-				//echo 2;
-				$traveller_id = $traveller['id'];
-				//get the last passing for this traveller 
-				$this->passing_model->traveller_id=$traveller_id;
-				$pass_from=$this->passing_model->getLastTravellerPassing();
-				
-				//determine if we should add new travel or not
-				if(count($pass_from)>0)
-				{
-					$pass_from_time = strtotime($pass_from[0]['passing_time']);//getting the pass from time
-					$pass_to_time = strtotime($passing_time);//getting the pass to time
+		try{
+			//$passing_time = urldecode($passing_time);
+			//loading  passing model
+			$this->load->model("passing_model");
+			//getting the station from the database
+			$this->load->model("station_model");
+			
+			$this->station_model->station_ID = $station_id;
+			
+			$station = $this->station_model->getStationByStationID();
+			//if the station exists in the database
+			if(isset($station[0])){
+				//check if this traveller exists in the database
+				$traveller = $this->checkTraveller($mac);
+				if(!$traveller){
+					/* *
+					 * if the traveller not found in the database
+					 * just add the new traveller and the new passing at the specified station
+					 * */
+					//echo 1;
+					//adding the new traveller to database
+					$traveller_id =$this->addTraveller($mac);
 					
-					//if the pass to happened after the pass from then this is a valid pass timing
-					if($pass_from_time < $pass_from_time){
-						//prepare fields to add a new pass
-						$this->passing_model->passing_time=$passing_time;
-						$this->passing_model->traveller_id=$traveller_id;
-						$this->passing_model->station_id=$station[0]['id'];
-						$pass_to=$this->passing_model->addPassing();
-						//if the two passings are not at the same station then add a travel
-						if($pass_from[0]['station_id'] != $station[0]['id']){
-							//new travel should be added
-							$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
-						}
-					}else{//if the new pass happened before the latest added pass
-						/**
-						 * if the new pass happened before the latest added pass we do the following:
-						 * 1- we check if the new pass is added before.
-						 * 2- if not we find the passings before and after this passing.
-						 * 3- we delete the travel between the passings found in the previous step(if it was found).
-						 * 4- we add a travel from the previous passing to the new passing and a travel from the
-						 * 	  new passing to the next passing.
-						 * */
-						 
-						 //check if this passing is already added
-						$this->passing_model->station_id=$station[0]['id'];
-						$this->passing_model->passing_time=$passing_time;
-						$this->passing_model->traveller_id=$traveller_id;
-						$passing_exist = $this->passing_model->checkPassingExist();
-						if(!isset($passing_exist[0])){//if it's not already in the database
-							//add the new passing to the database
+					//prepare fields to add a new pass
+					$this->passing_model->passing_time=$passing_time;
+					$this->passing_model->traveller_id=$traveller_id;
+					$this->passing_model->station_id=$station[0]['id'];
+					$pass_to=$this->passing_model->addPassing();
+				}else{
+					//if the traveller already exists in the database
+					//echo 2;
+					$traveller_id = $traveller['id'];
+					//get the last passing for this traveller 
+					$this->passing_model->traveller_id=$traveller_id;
+					$pass_from=$this->passing_model->getLastTravellerPassing();
+					
+					//determine if we should add new travel or not
+					if(count($pass_from)>0)
+					{
+						$pass_from_time = strtotime($pass_from[0]['passing_time']);//getting the pass from time
+						$pass_to_time = strtotime($passing_time);//getting the pass to time
+						//echo "<br/>".$pass_from_time."||".$pass_to_time."<br />";
+						//if the pass to happened after the pass from then this is a valid pass timing
+						if($pass_from_time < $pass_to_time){
+							/* *
+							 * If the new passing was the latest pass for this traveller in the database 
+							 * just add the pass and add atravel from the previous pass to this pass
+							 * */
+							//echo 3 . "<br />";
+							//prepare fields to add a new pass
 							$this->passing_model->passing_time=$passing_time;
 							$this->passing_model->traveller_id=$traveller_id;
 							$this->passing_model->station_id=$station[0]['id'];
-							
 							$pass_to=$this->passing_model->addPassing();
-							
-							//set the model's passing time 
-							$this->passing_model->passing_time = $passing_time;
-							//get the pass previous to the new pass
-							$previous = $this->passing_model->getPreviousPassing();
-							//get the pass after to the new pass
-							$next = $this->passing_model->getNextPassing();
-							if(isset($previous[0]) && isset($next[0])){
-								//delete the travel from the previous passing to the next passing if it was found
-								//load travel model
-								$this->load->model("travel_model");
-								//fill model fields
-								$this->travel_model->passing_from = $previous[0]["id"]; 
-								$this->travel_model->passing_to = $next[0]["id"]; 
+							//if the two passings are not at the same station then add a travel
+							if($pass_from[0]['station_id'] != $station[0]['id']){
+								//new travel should be added
+								$this->addTravel($pass_from[0]['id'],$pass_to,$pass_from[0]['passing_time'],$passing_time);
+							}
+						}else{//if the new pass happened before the latest added pass
+							/* *
+							 * if the new pass happened before the latest added pass we do the following:
+							 * 1- we check if the new pass is added before.
+							 * 2- if not we find the passings before and after this passing.
+							 * 3- we delete the travel between the passings found in the previous step(if it was found).
+							 * 4- we add a travel from the previous passing to the new passing and a travel from the
+							 * 	  new passing to the next passing.
+							 * */
+							 //echo 4 . "<br />";
+							 //check if this passing is already added
+							$this->passing_model->station_id=$station[0]['id'];
+							$this->passing_model->passing_time=$passing_time;
+							$this->passing_model->traveller_id=$traveller_id;
+							$passing_exist = $this->passing_model->checkPassingExist();
+							if(!isset($passing_exist[0])){//if it's not already in the database
+								//add the new passing to the database
+								$this->passing_model->passing_time=$passing_time;
+								$this->passing_model->traveller_id=$traveller_id;
+								$this->passing_model->station_id=$station[0]['id'];
 								
-								//get the travel
-								$travel = $this->travel_model->getTravelByPassings();
-								//if the travel exists
-								if(isset($travel[0])){
-									//set the id field in the model
-									$this->travel_model->id = $travel[0]["id"];
-									//delete the travel
-									$this->travel_model->deleteTravel();
+								$pass_to=$this->passing_model->addPassing();
+								//echo $pass_to. "<br />";
+								//set the model's passing time 
+								$this->passing_model->passing_time = $passing_time;
+								//set the model's traveller id
+								$this->passing_model->traveller_id = $traveller_id;
+								//get the pass previous to the new pass
+								$previous = $this->passing_model->getPreviousPassing();
+								//get the pass after to the new pass
+								$next = $this->passing_model->getNextPassing();
+								//echo "next: ".$next[0]["id"]. "<br />";
+								//echo "previous: ".$previous[0]["id"]. "<br />";
+								//if there is ap passing that happened before this passing
+								if(isset($previous[0])){
+									//if there is ap passing that happened after this passing
+									if(isset($next[0])){
+										//delete the travel from the previous passing to the next passing if it was found
+										//load travel model
+										$this->load->model("travel_model");
+										//fill model fields
+										$this->travel_model->passing_from = $previous[0]["id"]; 
+										$this->travel_model->passing_to = $next[0]["id"]; 
+										
+										//get the travel
+										$travel = $this->travel_model->getTravelByPassings();
+										//if the travel exists
+										if(isset($travel[0])){
+											//set the id field in the model
+											$this->travel_model->id = $travel[0]["id"];
+											//delete the travel
+											$this->travel_model->deleteTravel();
+										}
+										//add a travel from the previous passing to the new passing
+										$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
+										//add a travel from the new passing to the next passing
+										$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
+									}
 								}
-								//add a travel from the previous passing to the new passing
-								$this->addTravel($previous[0]["id"],$pass_to,$previous[0]["passing_time"],$passing_time);
-								//add a travel from the new passing to the next passing
-								$this->addTravel($pass_to,$next[0]["id"],$passing_time,$next[0]["passing_time"]);
 							}
 						}
 					}
 				}
 			}
+		}catch(Exception $e){
+			echo "couldn't add new pass to the database because of : \n".$e->getMessage()."\n";
+			return;
 		}
+		return "valid";
 	}
 	
 	
@@ -653,6 +824,9 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function checks if the traveller exists in the database.
+	 * 
+	 * Parameters:
+	 * $mac: The mac address of the detected BT device.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
@@ -679,6 +853,9 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function adds new Traveller  to the database.
 	 * 
+	 * Parameters:
+	 * $mac: The mac address of the detected BT device.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
@@ -704,7 +881,11 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function adds new Travel  to the database.
 	 * 
-	 * 
+	 * Parameters:
+	 * $pass_from: the id of the last passing before the current passing of this traveller(BT device) in the database.
+	 * $pass_to: the id of the current passing of this traveller(BT device) in the database.
+	 * $date_from: the time stamp of the last passing.
+	 * $date_to:the time stamp of the current passing.
 	 * 
 	 * created date: 25-04-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat*

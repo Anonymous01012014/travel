@@ -106,7 +106,7 @@ class Passing_model extends CI_Model{
 	 public function modifyPassing(){
 		$query = "UPDATE passing
 				  SET
-					passing_time = {$this->passing_time},
+					passing_time = '{$this->passing_time}',
 							traveller_id = {$this->traveller_id},
 							station_id = {$this->station_id}		
 	 			  WHERE id = {$this->id}";
@@ -194,7 +194,7 @@ class Passing_model extends CI_Model{
 				  FROM passing
 				  where traveller_id = {$this->traveller_id}
 					AND station_id = {$this->station_id}
-					AND passing_time = {$this->passing_time}";
+					AND passing_time = '{$this->passing_time}'";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();
@@ -213,7 +213,7 @@ class Passing_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getLastTravellerPassing(){
-		$query = "SELECT top 1 id AS id ,passing_time FROM passing
+		$query = "SELECT top 1 id AS id , station_id ,passing_time FROM passing
 				  where traveller_id = {$this->traveller_id}
 				  Order By passing_time desc";
 				  
@@ -224,7 +224,7 @@ class Passing_model extends CI_Model{
 	 * function name : getPreviousPassing
 	 * 
 	 * Description : 
-	 * Returns the passing before the given passing time
+	 * Returns the passing before the given passing time for the specified traveller
 	 * 
 	 * Created date : 25-04-2014
 	 * Modification date : ---
@@ -233,8 +233,9 @@ class Passing_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getPreviousPassing(){
-		$query = "SELECT top 1 id AS id ,passing_time FROM passing
-				  where passing_time <= {$this->passing_time}
+		$query = "SELECT top 1 id AS id, station_id ,passing_time FROM passing
+				  where passing_time < '{$this->passing_time}'
+					AND traveller_id = {$this->traveller_id}
 				  Order By passing_time desc";
 				  
 		$query = $this->db->query($query);
@@ -244,7 +245,7 @@ class Passing_model extends CI_Model{
 	 * function name : getNextPassing
 	 * 
 	 * Description : 
-	 * Returns the passing after the given passing time
+	 * Returns the passing after the given passing time for the specified traveller
 	 * 
 	 * Created date : 25-04-2014
 	 * Modification date : ---
@@ -253,8 +254,9 @@ class Passing_model extends CI_Model{
 	 * contact : molham225@gmail.com
 	 */
 	 public function getNextPassing(){
-		$query = "SELECT top 1 id AS id ,passing_time FROM passing
-				  where passing_time >= {$this->passing_time}
+		$query = "SELECT top 1 id AS id, station_id ,passing_time FROM passing
+				  where passing_time > '{$this->passing_time}'
+					AND traveller_id = {$this->traveller_id}
 				  Order By passing_time asc";
 				  
 		$query = $this->db->query($query);

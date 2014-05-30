@@ -9,14 +9,48 @@
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
+	 
+	 /* loading important libraries */
 	use Ratchet\Server\IoServer;
 	use Ratchet\Http\HttpServer;
 	use Ratchet\WebSocket\WsServer;
 	use Ratchet\MessageComponentInterface;
 	use Ratchet\ConnectionInterface;
 	require dirname(__DIR__) . '\\vendor\\autoload.php';
+	
+	
 	class Station_connector extends CI_Controller implements MessageComponentInterface {
+	
 		protected $clients;
+		
+		/* server to station message fields constants */
+		
+		/* message types */
+		var $ACK = 0;	
+		var $ERROR = 1;
+		
+		/* codes */
+		var $SUCCESS = 0;
+		var $UNAUTHORIZED = 1;	
+		var $NOT_REGISTERED = 2;
+		var $INVALID_MESSAGE = 3;	
+		var $EXECUTION_ERROR = 4;
+		
+		/* message details codes */	
+		//var $SUCCESS = 0; code = 0
+		//var $UNAUTHORIZED = 1; code = 1
+		//var $NOT_REGISTERED = 2; code = 2
+		
+		var $MESSAGE_PARSING_ERROR = 3;//code = 3
+		var $MESSAGE_TYPE_CONTENT_MISMATCH = 4;//code = 3
+		var $MESSAGE_TYPE_ERROR = 5;//code = 3
+		
+		var $HIGHWAY_NOT_FOUND = 6;//code = 4
+		var $STATION_REGITRATION_ERROR = 7;//code = 4
+		var $PASS_ADDING_ERROR = 8;//code = 4
+
+		/* End of server to station message fields constants */
+		
 		/**
 		 * Function name : __construct
 		 * Description: 
@@ -38,6 +72,9 @@
 		 * authenticating this connection.
 		 * 
 		 * 
+		 * Parameters:
+		 * $conn: the object that represent the current connection with the specified station
+		 * 
 		 * created date: 25-04-2014 
 		 * ccreated by: Eng. Ahmad Mulhem Barakat
 		 * contact: molham225@gmail.com
@@ -57,29 +94,41 @@
 		 * this function handles the messages coming from the connected stations.
 		 * 
 		 * 
+		 * Parameters:
+		 * $from: the object that represent the current connection with the specified station.
+		 * $msg: the message sent from the current station to the server.
+		 * 
 		 * created date: 25-04-2014 
 		 * ccreated by: Eng. Ahmad Mulhem Barakat
 		 * contact: molham225@gmail.com
 		 */
 		public function onMessage(ConnectionInterface $from, $msg) {
+			//load the message helper
+			//$this->load->helper("message_helper");
 			//the json decoded message
 			$decoded_msg = "";
 			//check if the message is in JSON format
 			try{
+				//echo "\n".$msg."\n";
 				$decoded_msg = json_decode($msg);
+				//echo "\n".$decoded_msg."\n";
 				//get the message sequence 
-				$message_sequence =  $decoded_msg->message_seq;
-				if($message_sequence != "" && is_numeric($message_sequence))// if the message sequence is valid
+				$message_sequence =  $decoded_msg->msg_seq;
+				if($message_sequence != "")// if the message sequence is valid
 				{
+					//echo "\n".$message_sequence."\n";
+					//echo "\n".$from->last_message_seq."\n";
 					if($message_sequence != $from->last_message_seq){//if the message wasn't a duplicate to the last message
 						//parse the not allowed characters using the url_encode
 						$msg = urlencode($msg);
 						//if the connection is not authorized yet then this message should be the authentication message
 						if(!$from->authenticated){
 							//get the satation_ID from the message
-							$station_ID = $decoded_msg->station_ID;
+							$station_ID = $decoded_msg->station_id;
+							echo "\n".$station_ID."\n";
 							//check this station existence in the database
-							$station_exists = shell_exec("php index.php main checkStation ".$msg." ");
+							$station_exists = shell_exec("php index.php main checkStation ".$station_ID." &");
+							echo "\n".$station_exists."\n";
 							//if the returned station id > 0 then the station was found
 							if($station_exists > 0){
 								//if the station exists in the database then set the connection authenticated field to true 
@@ -88,35 +137,46 @@
 								$from->station_id = $station_exists * 1;
 								
 								//send the message to the station controller to be parsed and executed
-								$result = shell_exec("php index.php message receive_message ".$msg." &");
+								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 								
 								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
-								echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
-								
-								//send back an Acknoledgement message to the station
-								$message = array("ACK"=> $message_sequence);
-								$message = json_encode($message);
-								$from->send(message);
+								//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
+								//if the result came back from the execution == valid then acknoledge the 
+								//message else just return the error message
+								//echo $result."\n";
+								//if($result == SUCCESS){
+								//setting the last message sequence as the current message
+								$from->last_message_seq = $message_sequence;
+								//send back the result message to the station
+								$this->sendToClient($from,$result,$message_sequence);
+								/*}else{
+									//send back the returned error message to the station
+									$this->sendToClient($from,$result,$message_sequence);
+								}*/
 								
 							}else{
-								echo "Unauthorized connection {$from->resourceId} closed\n";
-								$error = array("error"=>"This connection is unauthorized so it will be closed!");
-								$from->send(json_encode($error));
+								echo "Unauthorized connection {$from->resourceId} closed 1\n";
+								$this->sendToClient($from,$this->UNAUTHORIZED,"");
 								$from->close();
 							}
 						}else{
 						
 							$numRecv = count($this->clients) - 1;
 							
-							echo sprintf('Connection %d sending message "%s"\n'
-								, $from->resourceId, $msg);
+							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
+							
 							//send the message to the station controller to be parsed
-							$result = shell_exec("php index.php message receive_message ".$msg." &");
-							//send back an Acknoledgement message to the station
-							$message = array("ACK"=> $message_sequence);
-							$message = json_encode($message);
-							$from->send(message);
+							$result = shell_exec("php index.php main receiveMessage ".$msg." &");
+							//if the result came back from the execution == valid then acknoledge the 
+							//message else just return the error message
+							//echo "\n".$result."\n";
+							//if($result == |SUCCESS){
+								//setting the last message sequence as the current message
+							$from->last_message_seq = $message_sequence;
+							//}
+							//send back the result message to the station
+							$this->sendToClient($from,$result,$message_sequence);
 						}
 					}
 				}else{
@@ -124,22 +184,52 @@
 				}
 			}catch(Exception $e){
 				echo "Invalid message from connection {$from->resourceId}\n".$e->getMessage();
-				$error = array("error"=>"Invalid message!");
-				$from->send(json_encode($error));
+				$code = $this->MESSAGE_PARSING_ERROR;
+				$this->sendToClient($from,$code,"");
 				//if the connection that sent the misformatted message is not authenticated close the connection
 				if(!$from->authenticated){
-					echo "Unauthorized connection {$from->resourceId} closed\n";
-					$error = array("error"=>"This connection is unauthorized so it will be closed!");
-					$from->send(json_encode($error));
+					echo "Unauthorized connection {$from->resourceId} closed 2\n";
+					$code = $this->UNAUTHORIZED;
+					$this->sendToClient($from,$code,"");
 					$from->close();
 				}
 			}
 		}
+		
 		/**
-		 * Function name : __construct
+		 * Function name : sendToClient 
 		 * Description: 
-		 * this contructor is called as this object is initiated.
+		 * this function sends the formatted message to the specified client after 
+		 * logging it to the cmd.
 		 * 
+		 * Parameters:
+		 * client: the client that the message will be sent to.
+		 * code : the code of the returned message.
+		 * sequence : the sequence of the message that this message is a response to.
+		 * 
+		 * created date: 21-05-2014 
+		 * ccreated by: Eng. Ahmad Mulhem Barakat
+		 * contact: molham225@gmail.com
+		 */
+		public function sendToClient($client,$code,$sequence){
+			//load message helper
+			//$this->load->helper("message_helper");
+			//format the message to be sent
+			$message = $this->formatMessage($code,$sequence);
+			//log the message to the cmd
+			echo "sending Message to client ".$client->resourceId." :\n".$message."\n";
+			//send the message
+			$client->send($message);
+		}
+		
+		/**
+		 * Function name :onClose
+		 * Description: 
+		 * this function is called when the connection with the station is being closed.
+		 * 
+		 * 
+		 * Parameters:
+		 * $conn: the object that represent the current connection with the specified station
 		 * 
 		 * created date: 25-04-2014 
 		 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -160,15 +250,120 @@
 		 * this function closes the connection with the client if an error occurred.
 		 * 
 		 * 
+		 * Parameters:
+		 * $conn: the object that represent the current connection with the specified station
+		 * 
 		 * created date: 25-04-2014 
 		 * ccreated by: Eng. Ahmad Mulhem Barakat
 		 * contact: molham225@gmail.com
 		 */
 		public function onError(ConnectionInterface $conn, \Exception $e) {
 			echo "An error has occurred: {$e->getMessage()}\n";
-
+	
 			$conn->close();
 		}
+		
+		
+		
+		/**
+	 * function name : formatMeaasage
+	 * 
+	 * Description : 
+	 * This function formats the message that will be sent to the station.
+	 * 
+	 * parameters:
+	 * detail_code: the detail code of the message that will be sent.
+	 * message_sequence: the message sequence.
+	 * 
+	 * Created date : 28-05-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	function formatMessage($detail_code,$message_sequence){
+		//preparing message object
+		$message = array();
+		//adding the fields of the message
+		$message["msg_type"] = "";
+		$message["msg_seq"] = "";
+		$message["code"] = "";
+		$message["code_msg"] = "";
+		$message["code_details"] = "";
+		
+		//finding out the detail code sent and filling the message fields depending on it.
+		switch($detail_code){
+			case $this->SUCCESS:
+				$message["msg_type"] = $this->ACK;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->SUCCESS;
+				$message["code_msg"] = "success";
+				$message["code_details"] = "Message executed successfully";
+				break;
+			case $this->UNAUTHORIZED:
+				$message["msg_type"] = $this->ERROR;
+				$message["code"] = $this->UNAUTHORIZED;
+				$message["code_msg"] = "unauthorized";
+				$message["code_details"] = "This connection is unauthorized so it will be closed!";
+				break;
+			case $this->NOT_REGISTERED:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->NOT_REGISTERED;
+				$message["code_msg"] = "not registered";
+				$message["code_details"] = "Station not registered in the database!";
+				break;
+			case $this->MESSAGE_PARSING_ERROR:
+				$message["msg_type"] = $this->ERROR;
+				$message["code"] = $this->INVALID_MESSAGE;
+				$message["code_msg"] = "invalid message";
+				$message["code_details"] = "Error while parsing the message!";
+				break;
+			case $this->MESSAGE_TYPE_CONTENT_MISMATCH:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->INVALID_MESSAGE;
+				$message["code_msg"] = "invalid message";
+				$message["code_details"] = "message type doesn't match its content!";
+				break;
+			case $this->MESSAGE_TYPE_ERROR:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->INVALID_MESSAGE;
+				$message["code_msg"] = "invalid message";
+				$message["code_details"] = "Invalid message Type";
+				break;
+			case $this->HIGHWAY_NOT_FOUND:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->EXECUTION_ERROR;
+				$message["code_msg"] = "execution error";
+				$message["code_details"] = "Could not get the highway name from the given long,lat";
+				break;
+			case $this->STATION_REGITRATION_ERROR:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->EXECUTION_ERROR;
+				$message["code_msg"] = "execution error";
+				$message["code_details"] = "Error while registering the station!";
+				break;
+			case $this->PASS_ADDING_ERROR:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->EXECUTION_ERROR;
+				$message["code_msg"] = "execution error";
+				$message["code_details"] = "Error while adding new pass!";
+				break;
+			default:
+				$message["msg_type"] = $this->ERROR;
+				$message["msg_seq"] = $message_sequence;
+				$message["code"] = $this->EXECUTION_ERROR;
+				$message["code_msg"] = "execution error";
+				$message["code_details"] = "Unknown error occurred during execution!";
+				break;
+		}
+		return json_encode($message);
+	}
 	}
 
     /**
