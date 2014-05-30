@@ -37,6 +37,8 @@ class Main extends CI_Controller {
 	 * this function receives the sent message and stores it in the message 
 	 * local variable. then calls parse function.
 	 * 
+	 * Parameters:
+	 * $msg: The received message to be parsed.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -60,6 +62,7 @@ class Main extends CI_Controller {
 	 * contact: molham225@gmail.com
 	 */
 	public function parseMessage(){
+			$this->load->helper("message_helper");
 		try{
 			//echo "<br /> ".$this->message;
 			//parse message
@@ -72,9 +75,11 @@ class Main extends CI_Controller {
 			if ($this->message->msg_type == 1)//first deployment message(Registeration message)
 			{
 				if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
-					return $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+					$result = $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+					echo $result;
+					return;
 				}else{//if the message didn't have the expected fields return this error message
-					echo "message type doesn't match its content!";
+					echo MESSAGE_TYPE_CONTENT_MISMATCH;
 					return;
 				}
 			}else{
@@ -94,14 +99,14 @@ class Main extends CI_Controller {
 							//echo $this->message->station_id . $this->message->dev_lap . $this->message->dev_time;
 							$returned_value = $this->newPass($this->message->station_id,$this->message->dev_lap,$this->message->dev_time);
 							if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
-								echo "Error while adding new pass.";
+								echo PASS_ADDING_ERROR;
 								return;
 							}else{
-								echo "valid";
+								echo SUCCESS;
 								return;
 							}
 						}else{//if the message didn't have the expected fields return this error message
-							echo "message type doesn't match its content!";
+							echo MESSAGE_TYPE_CONTENT_MISMATCH;
 							return;
 						}
 					}
@@ -112,25 +117,25 @@ class Main extends CI_Controller {
 								//echo $detection->dev_lap."::".$detection->dev_time;
 								$returned_value = $this->newPass($this->message->station_id,$detection->dev_lap,$detection->dev_time);
 								if($returned_value != "valid"){//if the returned value not equal to "valid" then an error happened
-									echo "Error while adding new pass.";
+									echo PASS_ADDING_ERROR;
 									return;
 								}
 							}
-							echo "valid";
+							echo SUCCESS;
 							return;
 						}else{//if the message didn't have the expected fields return this error message
-							echo "message type doesn't match its content!";
+							echo MESSAGE_TYPE_CONTENT_MISMATCH;
 							return;
 						}
 					}else{//if the mesdsage type didn't match any of the previously specified types return this error message
-						echo "Invalid message type!";
+						echo MESSAGE_TYPE_ERROR;
 					}
 				}else{//if the highway_id is not registered in the database send error message
-					echo "This station isn't registered in the database. Please send the registeration message first.";				
+					echo NOT_REGISTERED;				
 				}
 			}
 		}catch(Exception $e){
-			echo "The following error happened wihle parsing the received message: \n ".$e->getMessage();
+			echo MESSAGE_PARSING_ERROR; //"The following error happened wihle parsing the received message: \n ".$e->getMessage();
 		}
 	}
 	
@@ -142,6 +147,8 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This method changes the status of the station to connected in the database.
 	 * 
+	 * Parameters:
+	 * $id: the id of the station that connected.
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
@@ -163,6 +170,9 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This method changes the status of the station to disconnected in the database.
 	 * 
+	 * Parameters:
+	 * $id: The id of the station that disconnected.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
@@ -182,6 +192,9 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function checks if the station exists in the database.
+	 * 
+	 * Parameters:
+	 * $station_ID: The identification alpha-numeric code that we want to check its availability in the database.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -211,6 +224,11 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function adds new station to the database.
+	 * 
+	 * Parameters:
+	 * $station_ID: The identification alpha-numeric code of the station that will be added to the database.
+	 * $lat: the GPS latitude of the new station.
+	 * $long: the GPS longitude of the new station.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -267,14 +285,12 @@ class Main extends CI_Controller {
 				/* recalculate highways beginning and ending stations */
 				$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 			}else{
-				echo "Could not get the highway name from the given long,lat";
-				return;
+				return HIGHWAY_NOT_FOUND;
 			}
 		}catch(Exception $e){
-			echo "could not add the new station to the database because of : \n".$e->getMessage();
-			return ;
+			return STATION_REGITRATION_ERROR;//"could not add the new station to the database because of : \n".$e->getMessage();
 		}
-		echo "valid";
+		return SUCCESS;
 	}
 	
 	
@@ -283,7 +299,6 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function finds and adds the new station's neighbors.
-	 * 
 	 * Algorithm of finding station neighbors:
 	 *	1- if this is the first station in the highway we do nothing.
 	 *	2- calculate the distances from the new station(call it N) to all the stations in the same highway.
@@ -305,9 +320,17 @@ class Main extends CI_Controller {
 	 *					2- add a new neighborhood relationship from N to A.
 	 *					3- add a new neighborhood relationship from A to N.
 	 *		
-	 *	remark: Highways are always two way so no need for one way processing.
-	 *					 
-	 *	important remark(B is neighbor to A <=> there is a flow from A to B)
+	 *	Remarks: 
+	 * 	. Highways are always two way so no need for one way processing.				 
+	 *	. B is neighbor to A <=> there is a flow from A to B.
+	 * 
+	 * Parameters:
+	 * $station_id: the id of the station in the database.
+	 * $highway: this variable contains a highway model object if the highway of this station was found in the database ,
+	 * 				OR
+	 * 			  It contains a false boolean value if the highway of this station wasn't in the database (it was newly added).
+	 * 			  It's used as a flag to know if the highway was already in the database or newly added. 
+	 * $highway_id : The id of the highway in the database.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -320,7 +343,7 @@ class Main extends CI_Controller {
 			$this->station_model->highway_id = $highway_id;
 			$stations = $this->station_model->getStationsbyHighway();
 		
-		 //if the new station is not the first one
+		 //if the new station is not the first one in its highway
 		if($highway){
 			//echo 1;
 			//load the neighbor model
@@ -483,6 +506,13 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function returns the shorter distance from the given index in thwe two given distance array.
 	 * 
+	 * Parameters:
+	 * $foreward_distances: an array of the distances between the new station and other stations on 
+	 * 						the highway in the foreward direction (from the new station to the other stations).
+	 * $backwaord_distances: an array of the distances between the new station and other stations on 
+	 * 						 the highway in the backword direction (from the other stations to the new station).
+	 * $index: the index of the station we want to get the distance for in the previous arrays. 
+	 * 
 	 * created date: 03-05-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
@@ -508,16 +538,24 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function checks if the highway exists in the database.
 	 * 
+	 * Parameters:
+	 * $highway_name: The name of the highway that was returned from the web service. 
+	 * 
+	 * Return:
+	 * $highway object if it was found in the database .
+	 * OR
+	 * boolean false value.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function checkHighway($highway){
+	public function checkHighway($highway_name){
 		//loading station model
 		$this->load->model('highway_model');
 		
-		$this->highway_model->name = $highway;
-		//get the highway specified by the station_ID
+		$this->highway_model->name = $highway_name;
+		//get the highway specified by the its name
 		$highway = $this->highway_model->getHighwayByName();
 		if(isset($highway[0]))
 		//if the highway was found return its object
@@ -532,6 +570,14 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * determine the highway terminals.
+	 * 
+	 * Parameters:
+	 * $highway: this variable contains a highway model object if the highway of this station was found in the database ,
+	 * 				OR
+	 * 			  It contains a false boolean value if the highway of this station wasn't in the database (it was newly added).
+	 * 			  It's used as a flag to know if the highway was already in the database or newly added. 
+	 * $highway_id : The id of the highway in the database.
+	 * $stations: An array of the sations on the specified highway.
 	 * 
 	 * created date: 29-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
@@ -578,6 +624,10 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function finds out the high way in the given GPS long and lat.
+	 * 
+	 * Parameters:
+	 * $long: The GPS longitude of the station.
+	 * $lat: The GPS latitude of the station.
 	 * 
 	 * created date: 25-04-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat
@@ -626,6 +676,11 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function adds new passing  to the database.
+	 * 
+	 * Parameters:
+	 * $station_id: The station's unique alpha-numeric id.
+	 * $mac: mac adderss of the detected BT device.
+	 * $passing_time: A time stamp at which the BT device was detected.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
@@ -770,6 +825,9 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function checks if the traveller exists in the database.
 	 * 
+	 * Parameters:
+	 * $mac: The mac address of the detected BT device.
+	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
 	 * contact: molham225@gmail.com
@@ -794,6 +852,9 @@ class Main extends CI_Controller {
 	 * 
 	 * Description: 
 	 * This function adds new Traveller  to the database.
+	 * 
+	 * Parameters:
+	 * $mac: The mac address of the detected BT device.
 	 * 
 	 * created date: 25-04-2014 
 	 * ccreated by: Eng. Ahmad Mulhem Barakat*
@@ -820,7 +881,11 @@ class Main extends CI_Controller {
 	 * Description: 
 	 * This function adds new Travel  to the database.
 	 * 
-	 * 
+	 * Parameters:
+	 * $pass_from: the id of the last passing before the current passing of this traveller(BT device) in the database.
+	 * $pass_to: the id of the current passing of this traveller(BT device) in the database.
+	 * $date_from: the time stamp of the last passing.
+	 * $date_to:the time stamp of the current passing.
 	 * 
 	 * created date: 25-04-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat*
