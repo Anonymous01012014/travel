@@ -79,19 +79,19 @@ function addStationToMap(map , stations)
 					station_id = stations[i]['id'];
 					marker[station_id.toString()].setMap(map);	
 					
-					/** don't do any thing on click 
+					
 					google.maps.event.addListener(marker[station_id.toString()],'click',function(i) {
 								  
 						//show site info in the right panel
 						return function(){							
-							infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Station ID: "+ stations[i]['station_id'] +"</div>");
+							infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Longitude: "+ stations[i]['longitude'] + "<br/>Latitude: "+ stations[i]['latitude'] +"</div>");
 							  	
 							var station_id = stations[i]['id'];
 							
 							infowindow.open(map,marker[station_id.toString()]);								
 						}	  
 					}(i));
-					*/			
+							
 				}	
 			
 				
