@@ -103,6 +103,8 @@
 		 * contact: molham225@gmail.com
 		 */
 		public function onMessage(ConnectionInterface $from, $msg) {
+			//log the received message to the cmd
+			echo "New message from ".$from->resourceId." :\n".$msg."\n";
 			//load the message helper
 			//$this->load->helper("message_helper");
 			//the json decoded message
