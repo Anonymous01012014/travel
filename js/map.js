@@ -79,7 +79,7 @@ function addStationToMap(map , stations)
 					station_id = stations[i]['id'];
 					marker[station_id.toString()].setMap(map);	
 					
-					/** don't do any thing on click 
+					
 					google.maps.event.addListener(marker[station_id.toString()],'click',function(i) {
 								  
 						//show site info in the right panel
@@ -91,7 +91,7 @@ function addStationToMap(map , stations)
 							infowindow.open(map,marker[station_id.toString()]);								
 						}	  
 					}(i));
-					*/			
+							
 				}	
 			
 				
