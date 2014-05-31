@@ -47,11 +47,11 @@
 				<td id="highway_travel_time_forward"></td>
 			</tr>
 			
-			<!-- trael time backward-->
+			<!-- trael time backward
 			<tr>
 				<th>Travel time backward:</th>
 				<td id="highway_travel_time_backward"></td>
-			</tr>
+			</tr>-->
 		</table>
 		
 		
@@ -93,6 +93,9 @@
   						
 				//set stations markers			
 				addStationToMap( map  , stations);
+				
+				//add route
+				//drawRoute(map , stations);
   			}			
 	  				
 		}); // end of on change
