@@ -15,6 +15,7 @@
 var marker = new Array();
 
 
+
 /*
  * function name: showOklahomeMap
  * Parameters:
@@ -220,7 +221,7 @@ function showHighwayInfo(highway_id)
 		  			info_line += "</td></tr>";
 		  			
 		  			//add this line to the table
-		  			$( "#stations_info" ).append( info_line );	
+		  			//$( "#stations_info" ).append( info_line );	
 	  			}
 	  			
 	  			
@@ -285,7 +286,7 @@ function drawRoute(map , stations)
     var service = new google.maps.DirectionsService();
     var polylines = new Array();
     for(var i=0; i<stations.length -2;i++ ){
-		var poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
+		poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
 		
 		var lat_lng = new Array();
 		
@@ -311,12 +312,25 @@ function drawRoute(map , stations)
 				   }
 			   }
 		   });	
+		   polylines.push(poly);
 		   
-		   google.maps.event.addListener(poly, 'click', function (event) {
-					//alert the index of the polygon
-					alert("hello");
-				}); 	
-				polylines.push(poly);
+		   
+		    var infowindow = new google.maps.InfoWindow({
+			maxWidth: 320
+				  });
+		    google.maps.event.addListener(polylines[i],'click',function(i) {
+					  
+				//show site info in the right panel
+				return function(){	
+					
+					infowindow.setPosition(new google.maps.LatLng(i.latLng.lat() , i.latLng.lng()));						
+					infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Hello</div>");
+					  	
+					
+					
+					infowindow.open(map,this);								
+				}	  
+			}(i));
 	}
 }
 
@@ -347,6 +361,7 @@ function getStationIndex(stations , station_id)
 	      return station_index;	      
 	   }	     	 
 	}
+	
 	
 	//if no station was found then return 0
 	return 0;											
