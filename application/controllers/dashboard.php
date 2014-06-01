@@ -63,7 +63,7 @@ class dashboard extends CI_Controller {
 		$this->load->model("views_model");
 		//foreward (from start to end )travel times
 		$travel_times = array();
-		//foreward (from start to end )travel times
+		//backward (from end to start )travel times
 		$travel_times_back = array();
 		//highway travel time in foreward direction
 		$highway_travel_time = 0;
