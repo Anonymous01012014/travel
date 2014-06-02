@@ -1,11 +1,11 @@
 <script>
 	$( document ).ready(function() {		
 		// Handler for .ready() called.
-		site = "Oklahome";
+		site = "Oklahoma";
 		latitude = 35.47278;
 		longitude = -98.75722;				
-		//get Oklahome map		
-		map = showMap(latitude , longitude);			
+		//get Oklahoma map		
+		map = showMap(latitude , longitude, 7);			
 	});		
 </script>
 
@@ -95,7 +95,7 @@
 				addStationToMap( map  , stations);
 				
 				//add route
-				//drawRoute(map , stations);
+				drawRoute(map , stations);
   			}			
 	  				
 		}); // end of on change

@@ -23,11 +23,11 @@ var marker = new Array();
  * longitude
  * 
  */
-function showMap(latitude, longitude)
+function showMap(latitude, longitude,zoom)
 {
 	var mapProp = {
 	  center:new google.maps.LatLng(latitude,longitude),
-	  zoom:12,
+	  zoom:zoom,
 	  mapTypeId:google.maps.MapTypeId.ROADMAP
 	  };
 	  
@@ -256,16 +256,15 @@ function showHighwayInfo(highway_id)
  * latitude: latitude
  * longitude: longitude 
  * created date: 11-5-2014
- * ccreated by: Mohanad kaleia
+ * created by: Mohanad kaleia
  * contact: ms.kaleia@gmail.com 
  */
 function setMapCenter(map , latitude , longitude)
 {
 	//set the center of the map 
-	map.setCenter(new google.maps.LatLng(latitude, longitude));												
+	map.setCenter(new google.maps.LatLng(latitude, longitude));
+	map.setZoom(12);												
 }
-
-
 
 
 /**
@@ -276,63 +275,167 @@ function setMapCenter(map , latitude , longitude)
  * map: map object of google map
  * latitude: latitude
  * longitude: longitude 
+ * 
  * created date: 11-5-2014
- * ccreated by: Mohanad kaleia
+ * created by: Mohanad kaleia
  * contact: ms.kaleia@gmail.com 
+ * 
+ * 
+ * 
+ * modifications:
+ * isolate creating polyline in a separate function.
+ * make infowindow appear at click location on the polyline.
+ * add travel info to each route's infowindow.
+ * 
+ * Modification date: 2-6-2014
+ * modified by: Eng. Ahmad Mulhem Barakat
+ * contact: molham225@gamil.com 
  */
 function drawRoute(map , stations)
 {
-	var path = new google.maps.MVCArray();
-    var service = new google.maps.DirectionsService();
     var polylines = new Array();
-    for(var i=0; i<stations.length -2;i++ ){
-		poly = new google.maps.Polyline({ map: map, strokeColor: '#00FF00' });
-		
+    for(var i=0; i<=stations.length -2;i++ ){
 		var lat_lng = new Array();
-		
+
 		myLatlng = new google.maps.LatLng(stations[i]['latitude'], stations[i]['longitude']);			
 		lat_lng.push(myLatlng) ;
-		
+
 		myLatlng = new google.maps.LatLng(stations[i + 1]['latitude'], stations[i + 1]['longitude']);			
 		lat_lng.push(myLatlng) ;
+
+		var poly = drawPolyline(map,lat_lng);
+
+		polylines.push(poly);
+
+
+		var infowindow = new google.maps.InfoWindow({
+		maxWidth: 320
+		});
 		
-		var src = lat_lng[0];
-		var des = lat_lng[1];
+		var closeWindow = false;
+		
+		google.maps.event.addListener(poly,'click',function(i) {
+		
+		//show site info in the right panel
+		return function(){
+		infowindow.setContent("<div style='min-width:175px;min-height:50px;'>distance: "+travel_times[i]['distance']+" m<br/>"+
+																			"travel time from ("+i+") to ("+(i+1)+"): "+travel_times[i]['travel_time']+" secs<br />"+
+																			"travel time from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_time']+" secs<br /></div>");
+		//infowindow.open(map,this);								
+		};
+		}(i));
+		google.maps.event.addListener(poly,'click',function(event) {
+			closeWindow = false;
+			var markerPosition=new google.maps.LatLng(event.latLng.lat(),  event.latLng.lng());
+			var pinColor = 'FFFF00';
+			var pinIcon = new google.maps.MarkerImage(
+			window.location.protocol+"//"+window.location.host + "/travel/images/google_marker/number_"+i+".png",
+			null,null,null,new google.maps.Size(1, 1)
+			);
+										
+			var marker = new google.maps.Marker({
+			  position:markerPosition,
+			  icon: pinIcon
+		  });
+			//infowindow.setPosition(new google.maps.LatLng(event.latLng.lat() , event.latLng.lng()));						
+			infowindow.open(map,marker);
+		});
+			
+		google.maps.event.addListener(map,'click',function(event) {
+			if(closeWindow){
+				infowindow.close();
+			}
+			closeWindow = true;
+		});	
+	}
+	
+	
+}
+
+
+
+/**
+ * Function name : drawPolyline
+ * Description: 
+ * draws a poly line on the given map object using the lat_lng array that have the start and end point coordinates.
+ * parameres:
+ * map: map object of google map
+ * lat_lng: array of latLng objects that represent the start and end points of the poly line.
+ * 
+ * created date: 11-5-2014
+ * created by: Mohanad kaleia
+ * contact: ms.kaleia@gmail.com 
+ **/
+function drawPolyline(map,lat_lng){
+	var service = new google.maps.DirectionsService();
+	var path = new google.maps.MVCArray();
+	var poly = new google.maps.Polyline({ map: map ,strokeColor: '#333',strokeWeight: 5,strokeOpacity: 0.5});
+	var src = lat_lng[0];
+	var des = lat_lng[1];
+
+	var distance1 = 0,
+		distance2 = 0;
+
+	service.route({
+		   origin: src,
+		   destination: des,
+		   travelMode: google.maps.DirectionsTravelMode.DRIVING
+	   }, function (result, status) {
+		   if (status == google.maps.DirectionsStatus.OK) {
+			   distance1 = result.routes[0].legs[0].distance.value;
+		   }
+	   });
+
+	service.route({
+		   origin: des,
+		   destination: src,
+		   travelMode: google.maps.DirectionsTravelMode.DRIVING
+	   }, function (result, status) {
+		   if (status == google.maps.DirectionsStatus.OK) {
+				distance2 = result.routes[0].legs[0].distance.value;
+		   }
+	   });	
+	   
+   if(distance1 < distance2)
+   {
 		path.push(src);
-		poly.setPath(path);
+
 		service.route({
 			   origin: src,
 			   destination: des,
 			   travelMode: google.maps.DirectionsTravelMode.DRIVING
 		   }, function (result, status) {
 			   if (status == google.maps.DirectionsStatus.OK) {
-				   for (var i = 0, len = result.routes[0].overview_path.length; i < len; i++) 
+				   //alert(result.routes[0].legs[0].distance.value + " meters"+
+				   //result.routes[0].legs[0].duration.value + " seconds");
+				   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
 				   {
-					   path.push(result.routes[0].overview_path[i]);
+					   path.push(result.routes[0].overview_path[j]);
 				   }
 			   }
 		   });	
-		   polylines.push(poly);
-		   
-		   
-		    var infowindow = new google.maps.InfoWindow({
-			maxWidth: 320
-				  });
-		    google.maps.event.addListener(polylines[i],'click',function(i) {
-					  
-				//show site info in the right panel
-				return function(){	
-					
-					infowindow.setPosition(new google.maps.LatLng(i.latLng.lat() , i.latLng.lng()));						
-					infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Hello</div>");
-					  	
-					
-					
-					infowindow.open(map,this);								
-				}	  
-			}(i));
-	}
+   }else{
+	   path.push(des);
+
+		service.route({
+			   origin: des,
+			   destination: src,
+			   travelMode: google.maps.DirectionsTravelMode.DRIVING
+		   }, function (result, status) {
+			   if (status == google.maps.DirectionsStatus.OK) {
+				   //alert(result.routes[0].legs[0].distance.value + " meters"+
+				   //result.routes[0].legs[0].duration.value + " seconds");
+				   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
+				   {
+					   path.push(result.routes[0].overview_path[j]);
+				   }
+			   }
+		   });	
+   }
+   poly.setPath(path);
+   return poly;
 }
+
 
 
 
