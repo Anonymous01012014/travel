@@ -13,7 +13,9 @@
 
 //marker array
 var marker = new Array();
-
+//distances to be compared for drawing routes between stations on the map
+var distance_foreward = 0 ,
+	distance_backward = 0 ;
 
 
 /*
@@ -294,59 +296,18 @@ function setMapCenter(map , latitude , longitude)
 function drawRoute(map , stations)
 {
     var polylines = new Array();
-    for(var i=0; i<=stations.length -2;i++ ){
+    for(var i=0; i< stations.length -1;i++ ){
 		var lat_lng = new Array();
 
-		myLatlng = new google.maps.LatLng(stations[i]['latitude'], stations[i]['longitude']);			
-		lat_lng.push(myLatlng) ;
+		var src = new google.maps.LatLng(stations[i]['latitude'], stations[i]['longitude']);			
+		lat_lng.push(src);
 
-		myLatlng = new google.maps.LatLng(stations[i + 1]['latitude'], stations[i + 1]['longitude']);			
-		lat_lng.push(myLatlng) ;
-
-		var poly = drawPolyline(map,lat_lng);
+		var des = new google.maps.LatLng(stations[i + 1]['latitude'], stations[i + 1]['longitude']);			
+		lat_lng.push(des);
+		//alert(lat_lng[0]+"-"+lat_lng[1]);
+		var poly = drawPolyline(map,lat_lng,i);
 
 		polylines.push(poly);
-
-
-		var infowindow = new google.maps.InfoWindow({
-		maxWidth: 320
-		});
-		
-		var closeWindow = false;
-		
-		google.maps.event.addListener(poly,'click',function(i) {
-		
-		//show site info in the right panel
-		return function(){
-		infowindow.setContent("<div style='min-width:175px;min-height:50px;'>distance: "+travel_times[i]['distance']+" m<br/>"+
-																			"travel time from ("+i+") to ("+(i+1)+"): "+travel_times[i]['travel_time']+" secs<br />"+
-																			"travel time from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_time']+" secs<br /></div>");
-		//infowindow.open(map,this);								
-		};
-		}(i));
-		google.maps.event.addListener(poly,'click',function(event) {
-			closeWindow = false;
-			var markerPosition=new google.maps.LatLng(event.latLng.lat(),  event.latLng.lng());
-			var pinColor = 'FFFF00';
-			var pinIcon = new google.maps.MarkerImage(
-			window.location.protocol+"//"+window.location.host + "/travel/images/google_marker/number_"+i+".png",
-			null,null,null,new google.maps.Size(1, 1)
-			);
-										
-			var marker = new google.maps.Marker({
-			  position:markerPosition,
-			  icon: pinIcon
-		  });
-			//infowindow.setPosition(new google.maps.LatLng(event.latLng.lat() , event.latLng.lng()));						
-			infowindow.open(map,marker);
-		});
-			
-		google.maps.event.addListener(map,'click',function(event) {
-			if(closeWindow){
-				infowindow.close();
-			}
-			closeWindow = true;
-		});	
 	}
 	
 	
@@ -361,84 +322,166 @@ function drawRoute(map , stations)
  * parameres:
  * map: map object of google map
  * lat_lng: array of latLng objects that represent the start and end points of the poly line.
+ * index: the index of this polyline in the polylines array.
  * 
  * created date: 11-5-2014
  * created by: Mohanad kaleia
  * contact: ms.kaleia@gmail.com 
+ * 
+ * modifications:
+ * this function now only measures the distance between the stations in opposite directions
+ * to get the shortest distance then calls the getPolyline function.
+ * 
+ * Modification date: 7-6-2014
+ * modified by: Eng. Ahmad Mulhem Barakat
+ * contact: molham225@gamil.com 
  **/
-function drawPolyline(map,lat_lng){
-	var service = new google.maps.DirectionsService();
+function drawPolyline(map,lat_lng,index){		
+	var distanceService = new google.maps.DistanceMatrixService();
+	alert(lat_lng);
+	var rev_lat_lng = lat_lng.slice();
+	rev_lat_lng.reverse();
+	alert(lat_lng);
+	distanceService.getDistanceMatrix({
+		   origins: lat_lng,
+		   destinations: rev_lat_lng,
+		   travelMode: google.maps.DirectionsTravelMode.DRIVING
+	   }, function (result, status) {
+			if (status == google.maps.DirectionsStatus.OK) {
+					alert(1);
+					distance_backward = result.rows[1].elements[1].distance.value;//result.routes[0].legs[0].distance.value;
+					distance_foreward = result.rows[0].elements[0].distance.value;
+					alert(distance_foreward+"::"+distance_backward);
+					alert(lat_lng);
+					return getPolyline(map,lat_lng,index);
+			}			
+	   });
+}
+
+/**
+ * Function name : getPolyline
+ * Description: 
+ * This function compares the distances calculated in the previous functions and 
+ * creates the polyline using the shorter distance direction.then calls the add listeners function to add info window to the poly line.
+ * lastly it returns the created poly line
+ * 
+ * parameres:
+ * map: map object of google map
+ * lat_lng: array of latLng objects that represent the start and end points of the poly line.
+ * index: the index of this polyline in the polylines array.
+ * 
+ * created date: 7-6-2014
+ * created by: Ahmad Mulhem Barakat & Mohanad kaleia
+ * contact: molham25@gmail.com , ms.kaleia@gmail.com 
+ * 
+ **/
+function getPolyline(map,lat_lng,index){
+	//directions service object for drawing the route between stations
+	var directionService = new google.maps.DirectionsService();
+	alert(2);
 	var path = new google.maps.MVCArray();
 	var poly = new google.maps.Polyline({ map: map ,strokeColor: '#333',strokeWeight: 5,strokeOpacity: 0.5});
-	var src = lat_lng[0];
-	var des = lat_lng[1];
-
-	var distance1 = 0,
-		distance2 = 0;
-
-	service.route({
-		   origin: src,
-		   destination: des,
-		   travelMode: google.maps.DirectionsTravelMode.DRIVING
-	   }, function (result, status) {
-		   if (status == google.maps.DirectionsStatus.OK) {
-			   distance1 = result.routes[0].legs[0].distance.value;
-		   }
-	   });
-
-	service.route({
-		   origin: des,
-		   destination: src,
-		   travelMode: google.maps.DirectionsTravelMode.DRIVING
-	   }, function (result, status) {
-		   if (status == google.maps.DirectionsStatus.OK) {
-				distance2 = result.routes[0].legs[0].distance.value;
-		   }
-	   });	
-	   
-   if(distance1 < distance2)
+	if(distance_foreward < distance_backward)
    {
-		path.push(src);
+		path.push(lat_lng[0]);
 
-		service.route({
-			   origin: src,
-			   destination: des,
+		directionService.route({
+			   origin: lat_lng[0],
+			   destination: lat_lng[1],
 			   travelMode: google.maps.DirectionsTravelMode.DRIVING
 		   }, function (result, status) {
 			   if (status == google.maps.DirectionsStatus.OK) {
-				   //alert(result.routes[0].legs[0].distance.value + " meters"+
-				   //result.routes[0].legs[0].duration.value + " seconds");
+				   alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
 				   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
 				   {
 					   path.push(result.routes[0].overview_path[j]);
 				   }
+				   poly.setPath(path);
+				   addListeners(poly,map,index);
 			   }
 		   });	
    }else{
-	   path.push(des);
+	   path.push(lat_lng[1]);
 
-		service.route({
-			   origin: des,
-			   destination: src,
-			   travelMode: google.maps.DirectionsTravelMode.DRIVING
-		   }, function (result, status) {
-			   if (status == google.maps.DirectionsStatus.OK) {
-				   //alert(result.routes[0].legs[0].distance.value + " meters"+
-				   //result.routes[0].legs[0].duration.value + " seconds");
-				   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
-				   {
-					   path.push(result.routes[0].overview_path[j]);
-				   }
+		directionService.route({
+		   origin: lat_lng[1],
+		   destination: lat_lng[0],
+		   travelMode: google.maps.DirectionsTravelMode.DRIVING
+	   }, function (result, status) {
+		   if (status == google.maps.DirectionsStatus.OK) {
+			   alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
+			   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
+			   {
+				   path.push(result.routes[0].overview_path[j]);
 			   }
-		   });	
-   }
-   poly.setPath(path);
-   return poly;
+			   poly.setPath(path);
+			   addListeners(poly,map,index);
+			   
+			}
+		});
+	
+	}
+	return poly;
 }
 
+/**
+ * Function name : addListeners
+ * Description: 
+ * This function adds the click listeners to the poly line and map to show the infowindow.
+ * 
+ * parameres:
+ * poly: the polyline created in the previous function.
+ * map: map object of google map.
+ * i: the index of this polyline in the polylines array.
+ * 
+ * created date: 7-6-2014
+ * created by: Ahmad Mulhem Barakat & Mohanad kaleia
+ * contact: molham25@gmail.com , ms.kaleia@gmail.com 
+ * 
+ **/
 
-
-
+function addListeners(poly,map,i){
+	var infowindow = new google.maps.InfoWindow({
+		maxWidth: 320
+	});
+	
+	var closeWindow = false;
+	
+	google.maps.event.addListener(poly,'click',function(i) {
+		
+		//show site info in the right panel
+		return function(){
+			infowindow.setContent("<div style='min-width:175px;min-height:50px;'>distance: "+travel_times[i]['distance']+" m<br/>"+
+																			"travel time from ("+i+") to ("+(i+1)+"): "+travel_times[i]['travel_time']+" secs<br />"+
+																			"travel time from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_time']+" secs<br /></div>");
+		//infowindow.open(map,this);								
+		};
+	}(i));
+	google.maps.event.addListener(poly,'click',function(event) {
+		closeWindow = false;
+		var markerPosition=new google.maps.LatLng(event.latLng.lat(),  event.latLng.lng());
+		var pinColor = 'FFFF00';
+		var pinIcon = new google.maps.MarkerImage(
+		window.location.protocol+"//"+window.location.host + "/travel/images/google_marker/number_"+i+".png",
+		null,null,null,new google.maps.Size(1, 1)
+		);
+									
+		var marker = new google.maps.Marker({
+		  position:markerPosition,
+		  icon: pinIcon
+		});
+		//infowindow.setPosition(new google.maps.LatLng(event.latLng.lat() , event.latLng.lng()));						
+		infowindow.open(map,marker);
+	});
+		
+	google.maps.event.addListener(map,'click',function(event) {
+		if(!closeWindow){
+			infowindow.close();
+		}
+		closeWindow = true;
+	});	
+	   
+}
 
 
 /**

@@ -27,7 +27,7 @@
 		
 		/* message types */
 		var $ACK = 0;	
-		var $ERROR = 1;
+		var $ERROR = 9;
 		
 		/* codes */
 		var $SUCCESS = 0;

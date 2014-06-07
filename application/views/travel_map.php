@@ -1,13 +1,3 @@
-<script>
-	$( document ).ready(function() {		
-		// Handler for .ready() called.
-		site = "Oklahoma";
-		latitude = 35.47278;
-		longitude = -98.75722;				
-		//get Oklahoma map		
-		map = showMap(latitude , longitude, 7);			
-	});		
-</script>
 
 <div id="container" class="col-md-8 col-md-offset-2">
 	
@@ -76,6 +66,15 @@
 
 <script>
 	$( document ).ready(function() {
+		
+		// Handler for .ready() called.
+		site = "Oklahoma";
+		latitude = 35.47278;
+		longitude = -98.75722;				
+		//get Oklahoma map		
+		map = showMap(latitude , longitude, 7);		
+		
+		
   	// Handler for .ready() called.
   		$( "#highway" ).change(function() {
   			
