@@ -338,21 +338,21 @@ function drawRoute(map , stations)
  **/
 function drawPolyline(map,lat_lng,index){		
 	var distanceService = new google.maps.DistanceMatrixService();
-	alert(lat_lng);
+	//alert(lat_lng);
 	var rev_lat_lng = lat_lng.slice();
 	rev_lat_lng.reverse();
-	alert(lat_lng);
+	//alert(lat_lng);
 	distanceService.getDistanceMatrix({
 		   origins: lat_lng,
 		   destinations: rev_lat_lng,
 		   travelMode: google.maps.DirectionsTravelMode.DRIVING
 	   }, function (result, status) {
 			if (status == google.maps.DirectionsStatus.OK) {
-					alert(1);
+					//alert(1);
 					distance_backward = result.rows[1].elements[1].distance.value;//result.routes[0].legs[0].distance.value;
 					distance_foreward = result.rows[0].elements[0].distance.value;
-					alert(distance_foreward+"::"+distance_backward);
-					alert(lat_lng);
+					//alert(distance_foreward+"::"+distance_backward);
+					//alert(lat_lng);
 					return getPolyline(map,lat_lng,index);
 			}			
 	   });
@@ -378,7 +378,7 @@ function drawPolyline(map,lat_lng,index){
 function getPolyline(map,lat_lng,index){
 	//directions service object for drawing the route between stations
 	var directionService = new google.maps.DirectionsService();
-	alert(2);
+	//alert(2);
 	var path = new google.maps.MVCArray();
 	var poly = new google.maps.Polyline({ map: map ,strokeColor: '#333',strokeWeight: 5,strokeOpacity: 0.5});
 	if(distance_foreward < distance_backward)
@@ -391,7 +391,7 @@ function getPolyline(map,lat_lng,index){
 			   travelMode: google.maps.DirectionsTravelMode.DRIVING
 		   }, function (result, status) {
 			   if (status == google.maps.DirectionsStatus.OK) {
-				   alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
+				   //alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
 				   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
 				   {
 					   path.push(result.routes[0].overview_path[j]);
@@ -409,7 +409,7 @@ function getPolyline(map,lat_lng,index){
 		   travelMode: google.maps.DirectionsTravelMode.DRIVING
 	   }, function (result, status) {
 		   if (status == google.maps.DirectionsStatus.OK) {
-			   alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
+			   //alert("chosen :: "+result.routes[0].legs[0].distance.value + " meters");
 			   for (var j = 0, len = result.routes[0].overview_path.length; j < len; j++) 
 			   {
 				   path.push(result.routes[0].overview_path[j]);
