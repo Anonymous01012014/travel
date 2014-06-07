@@ -48,7 +48,7 @@
 $active_group = 'default';
 $active_record = TRUE;
 
-$db['default']['hostname'] = '198.38.94.163';
+$db['default']['hostname'] = '172.0.0.1';
 $db['default']['port'] = '1433';
 $db['default']['username'] = 'sa';
 $db['default']['password'] = 'ecobuild';
