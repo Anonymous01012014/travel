@@ -87,6 +87,7 @@
 			// Store the new connection to send messages to later
 			$this->clients->attach($conn);
 			echo "New connection! ({$conn->resourceId})\n";
+			$this->logEvent("New connection interface {$conn->resourceId} opened..");
 		}
 		/**
 		 * Function name : onMessage
@@ -105,6 +106,7 @@
 		public function onMessage(ConnectionInterface $from, $msg) {
 			//log the received message to the cmd
 			echo "New message from ".$from->resourceId." :\n".$msg."\n";
+			$this->logEvent("New Message from interface ".$from->resourceId." :\n".$msg."");
 			//load the message helper
 			//$this->load->helper("message_helper");
 			//the json decoded message
@@ -133,15 +135,15 @@
 							echo "\n".$station_exists."\n";
 							//if the returned station id > 0 then the station was found
 							if($station_exists > 0){
+								$this->logEvent("Station ".$station_ID." connected on interface ".$from->resourceId.".");
 								//if the station exists in the database then set the connection authenticated field to true 
 								$from->authenticated = true;
 								//and add the station id to the connection object
 								$from->station_id = $station_exists * 1;
-								
+								$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 								//send the message to the station controller to be parsed and executed
 								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 								
-								$numRecv = count($this->clients) - 1;
 								//log the action to the cmd
 								//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
 								//if the result came back from the execution == valid then acknoledge the 
@@ -158,16 +160,15 @@
 								}*/
 								
 							}else{
+								$this->logEvent("Connected on interface ".$from->resourceId." is not authorized.");
 								echo "Unauthorized connection {$from->resourceId} closed 1\n";
 								$this->sendToClient($from,$this->UNAUTHORIZED,"");
 								$from->close();
 							}
 						}else{
-						
-							$numRecv = count($this->clients) - 1;
 							
 							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
-							
+							$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 							//send the message to the station controller to be parsed
 							$result = shell_exec("php index.php main receiveMessage ".$msg." &");
 							//if the result came back from the execution == valid then acknoledge the 
@@ -185,11 +186,13 @@
 					throw new Exception('Invalid message sequence');
 				}
 			}catch(Exception $e){
+				$this->logEvent("Invalid message sequence sent from interface ".$from->resourceId.".");
 				echo "Invalid message from connection {$from->resourceId}\n".$e->getMessage();
 				$code = $this->MESSAGE_PARSING_ERROR;
 				$this->sendToClient($from,$code,"");
 				//if the connection that sent the misformatted message is not authenticated close the connection
 				if(!$from->authenticated){
+					$this->logEvent("Connected on interface ".$from->resourceId." is not authorized.");
 					echo "Unauthorized connection {$from->resourceId} closed 2\n";
 					$code = $this->UNAUTHORIZED;
 					$this->sendToClient($from,$code,"");
@@ -219,6 +222,7 @@
 			//format the message to be sent
 			$message = $this->formatMessage($code,$sequence);
 			//log the message to the cmd
+			$this->logEvent("sending a message to interface ".$from->resourceId.":\n".$message);
 			echo "sending Message to client ".$client->resourceId." :\n".$message."\n";
 			//send the message
 			$client->send($message);
@@ -240,11 +244,14 @@
 		public function onClose(ConnectionInterface $conn) {
 			//if the connecion had a station id field disconnect the station
 			if(isset($conn->station_id)){
+				$this->logEvent("connection closed with station ".$conn->station_id." on interface ".$conn->resourceId);
 				shell_exec("php index.php message discoonectStation ".$conn->station_id." &");
+			}else{
+				$this->logEvent("connection closed on interface ".$conn->resourceId);
 			}
 			// The connection is closed, remove it, as we can no longer send it messages
 			$this->clients->detach($conn);
-			echo "Connection {$conn->resourceId} has disconnected\n";
+			echo "Client {$conn->resourceId} disconnected\n";
 		}
 		/**
 		 * Function name : onError 
@@ -261,7 +268,7 @@
 		 */
 		public function onError(ConnectionInterface $conn, \Exception $e) {
 			echo "An error has occurred: {$e->getMessage()}\n";
-	
+			$this->logEvent("An error has occurred: {$e->getMessage()}");
 			$conn->close();
 		}
 		
@@ -301,6 +308,7 @@
 				$message["code"] = $this->SUCCESS;
 				$message["code_msg"] = "success";
 				$message["code_details"] = "Message executed successfully";
+				$this->logEvent("Message(sequence = ".$message_sequence.") executed successfully.");
 				break;
 			case $this->UNAUTHORIZED:
 				$message["msg_type"] = $this->ERROR;
@@ -366,7 +374,31 @@
 		}
 		return json_encode($message);
 	}
+	
+	
+	/**
+	 * file name : logEvent
+	 * 
+	 * Description :
+	 * this function is for logging events to the log.txt file.
+	 * 
+	 * Created date ; 8-06-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahamad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */    
+	
+	function logEvent($message)
+	{
+		$fp = fopen('files/log.txt', 'a');
+		fwrite($fp, $message);
+		fwrite($fp, "\n");
+		fclose($fp);
 	}
+	
+	
+}
 
     /**
 	 * Starting the web socket server using station_connector object on port 9100
