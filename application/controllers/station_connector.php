@@ -222,7 +222,7 @@
 			//format the message to be sent
 			$message = $this->formatMessage($code,$sequence);
 			//log the message to the cmd
-			$this->logEvent("sending a message to interface ".$from->resourceId.":\n".$message);
+			$this->logEvent("sending a message to interface ".$client->resourceId.":\n".$message);
 			echo "sending Message to client ".$client->resourceId." :\n".$message."\n";
 			//send the message
 			$client->send($message);
