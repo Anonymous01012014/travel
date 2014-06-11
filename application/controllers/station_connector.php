@@ -140,6 +140,7 @@
 								$from->authenticated = true;
 								//and add the station id to the connection object
 								$from->station_id = $station_exists * 1;
+								$from->station_ID = $station_ID;
 								$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 								//send the message to the station controller to be parsed and executed
 								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
@@ -245,7 +246,7 @@
 			//if the connecion had a station id field disconnect the station
 			if(isset($conn->station_id)){
 				$this->logEvent("connection closed with station ".$conn->station_id." on interface ".$conn->resourceId);
-				shell_exec("php index.php message discoonectStation ".$conn->station_id." &");
+				shell_exec("php index.php message discoonectStation ".$conn->station_ID." &");
 			}else{
 				$this->logEvent("connection closed on interface ".$conn->resourceId);
 			}
