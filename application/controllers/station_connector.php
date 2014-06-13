@@ -392,7 +392,10 @@
 	
 	function logEvent($message)
 	{
+		date_default_timezone_set ( "America/Chicago" );
+		$time = date( "Y-m-d H:i:s");
 		$fp = fopen('files/log.txt', 'a');
+		fwrite($fp, $time."-- ");
 		fwrite($fp, $message);
 		fwrite($fp, "\n");
 		fclose($fp);
