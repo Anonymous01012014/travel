@@ -1,0 +1,206 @@
+2014-06-14 03:01:48-- New connection interface 58 opened..
+2014-06-14 03:02:07-- New Message from interface 58 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-06-14 03:02:07-- Connected on interface 58 is not authorized.
+2014-06-14 03:02:07-- sending a message to interface 58:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-06-14 03:02:07-- connection closed on interface 58
+2014-06-14 03:03:30-- New connection interface 112 opened..
+2014-06-14 03:03:33-- New Message from interface 112 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-06-14 03:03:42-- Station BT-001 connected on interface 112.
+2014-06-14 03:03:42-- Parsing and executing message(seq = 794b) from interface 112.
+2014-06-14 03:03:55-- Message(sequence = 794b) executed successfully.
+2014-06-14 03:03:55-- sending a message to interface 112:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-06-14 06:08:18-- New connection interface 58 opened..
+2014-06-14 06:11:08-- New connection interface 58 opened..
+2014-06-14 06:11:16-- New Message from interface 58 :
+اه
+2014-06-14 06:11:16-- Invalid message sequence sent from interface 58.
+2014-06-14 06:11:16-- sending a message to interface 58:
+{"msg_type":9,"msg_seq":"","code":3,"code_msg":"invalid message","code_details":"Error while parsing the message!"}
+2014-06-14 06:11:16-- Connected on interface 58 is not authorized.
+2014-06-14 06:11:16-- sending a message to interface 58:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-06-14 06:11:16-- connection closed on interface 58
+2014-06-14 06:17:24-- New connection interface 58 opened..
+2014-06-14 06:17:24-- connection closed on interface 58
+2014-06-14 06:17:24-- New connection interface 105 opened..
+2014-06-14 06:17:24-- connection closed on interface 105
+2014-06-14 06:17:24-- New connection interface 114 opened..
+2014-06-14 06:17:24-- connection closed on interface 114
+2014-06-14 06:17:24-- New connection interface 122 opened..
+2014-06-14 06:17:25-- connection closed on interface 122
+2014-06-14 06:17:25-- New connection interface 129 opened..
+2014-06-14 06:17:30-- New Message from interface 129 :
+لبي
+2014-06-14 06:17:30-- Invalid message sequence sent from interface 129.
+2014-06-14 06:17:30-- sending a message to interface 129:
+{"msg_type":9,"msg_seq":"","code":3,"code_msg":"invalid message","code_details":"Error while parsing the message!"}
+2014-06-14 06:17:30-- Connected on interface 129 is not authorized.
+2014-06-14 06:17:30-- sending a message to interface 129:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-06-14 06:17:30-- connection closed on interface 129
+2014-06-14 06:17:35-- New connection interface 143 opened..
+2014-06-14 06:21:16-- connection closed on interface 143
+2014-07-02 06:03:19-- New connection interface 59 opened..
+2014-07-02 06:06:45-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:06:52-- Station BT-001 connected on interface 59.
+2014-07-02 06:06:52-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:07:10-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:07:10-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:07:16-- New connection interface 118 opened..
+2014-07-02 06:07:29-- New Message from interface 118 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:07:36-- Station BT-001 connected on interface 118.
+2014-07-02 06:07:36-- Parsing and executing message(seq = 794b) from interface 118.
+2014-07-02 06:07:56-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:07:56-- sending a message to interface 118:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:14:11-- connection closed with station 2115 on interface 59
+2014-07-02 06:14:11-- New connection interface 134 opened..
+2014-07-02 06:14:13-- connection closed on interface 134
+2014-07-02 06:14:13-- New connection interface 145 opened..
+2014-07-02 06:14:15-- connection closed with station 2115 on interface 118
+2014-07-02 06:14:15-- New connection interface 158 opened..
+2014-07-02 06:14:16-- connection closed on interface 158
+2014-07-02 06:14:16-- New connection interface 166 opened..
+2014-07-02 06:14:56-- New connection interface 59 opened..
+2014-07-02 06:14:58-- New connection interface 108 opened..
+2014-07-02 06:15:03-- New Message from interface 108 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:15:09-- Station BT-001 connected on interface 108.
+2014-07-02 06:15:09-- Parsing and executing message(seq = 794b) from interface 108.
+2014-07-02 06:15:29-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:15:29-- sending a message to interface 108:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:23:41-- New connection interface 59 opened..
+2014-07-02 06:23:54-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:24:02-- Station BT-001 connected on interface 59.
+2014-07-02 06:24:02-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:24:20-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:24:20-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:27:27-- New connection interface 59 opened..
+2014-07-02 06:27:41-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:27:48-- Station BT-001 connected on interface 59.
+2014-07-02 06:27:48-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:28:06-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:28:06-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:30:41-- New connection interface 59 opened..
+2014-07-02 06:30:56-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:31:04-- Station BT-001 connected on interface 59.
+2014-07-02 06:31:04-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:31:22-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:31:22-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:31:22-- New connection interface 117 opened..
+2014-07-02 06:31:32-- New Message from interface 117 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:31:38-- Station BT-001 connected on interface 117.
+2014-07-02 06:31:38-- Parsing and executing message(seq = 794b) from interface 117.
+2014-07-02 06:31:56-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:31:56-- sending a message to interface 117:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:33:40-- New connection interface 59 opened..
+2014-07-02 06:33:43-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:33:49-- Station BT-001 connected on interface 59.
+2014-07-02 06:33:49-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:34:06-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:34:06-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:34:06-- New connection interface 117 opened..
+2014-07-02 06:34:06-- New connection interface 125 opened..
+2014-07-02 06:34:06-- connection closed on interface 117
+2014-07-02 06:34:24-- New Message from interface 125 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:34:31-- Station BT-001 connected on interface 125.
+2014-07-02 06:34:31-- Parsing and executing message(seq = 794b) from interface 125.
+2014-07-02 06:34:47-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:34:47-- sending a message to interface 125:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:35:01-- New connection interface 59 opened..
+2014-07-02 06:35:10-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:35:18-- Station BT-001 connected on interface 59.
+2014-07-02 06:35:18-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 06:35:36-- Message(sequence = 794b) executed successfully.
+2014-07-02 06:35:36-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 06:35:36-- New connection interface 117 opened..
+2014-07-02 06:35:41-- New Message from interface 117 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 06:35:51-- Station BT-001 connected on interface 117.
+2014-07-02 08:46:52-- New connection interface 59 opened..
+2014-07-02 08:47:12-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:47:19-- Station BT-001 connected on interface 59.
+2014-07-02 08:47:19-- Parsing and executing message(seq = 794b) from interface 59.
+2014-07-02 08:47:40-- Message(sequence = 794b) executed successfully.
+2014-07-02 08:47:40-- sending a message to interface 59:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 08:47:40-- New connection interface 117 opened..
+2014-07-02 08:48:26-- New Message from interface 117 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:48:35-- Station BT-001 connected on interface 117.
+2014-07-02 08:48:35-- Station (BT-001) on interface  has a the same station id as an already connected station.
+2014-07-02 08:52:18-- New connection interface 59 opened..
+2014-07-02 08:52:20-- New connection interface 108 opened..
+2014-07-02 08:52:34-- New Message from interface 108 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:52:40-- Station BT-001 connected on interface 108.
+2014-07-02 08:52:40-- Parsing and executing message(seq = 794b) from interface 108.
+2014-07-02 08:52:58-- Message(sequence = 794b) executed successfully.
+2014-07-02 08:52:58-- sending a message to interface 108:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 08:52:58-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:53:06-- Station BT-001 connected on interface 59.
+2014-07-02 08:53:06-- Station (BT-001) on interface  has a the same station id as an already connected station.
+2014-07-02 08:57:21-- New connection interface 59 opened..
+2014-07-02 08:57:22-- New connection interface 108 opened..
+2014-07-02 08:57:49-- New Message from interface 108 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:57:57-- Station BT-001 connected on interface 108.
+2014-07-02 08:57:57-- Parsing and executing message(seq = 794b) from interface 108.
+2014-07-02 08:58:19-- Message(sequence = 794b) executed successfully.
+2014-07-02 08:58:19-- sending a message to interface 108:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-02 08:58:19-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-02 08:58:30-- Station BT-001 connected on interface 59.
+2014-07-02 08:58:30-- Station (BT-001) on interface  has a the same station id as an already connected station.
+2014-07-04 06:40:30-- New connection interface 59 opened..
+2014-07-04 06:40:51-- New connection interface 59 opened..
+2014-07-04 06:40:51-- num of open connections = 1
+2014-07-04 06:40:58-- New connection interface 109 opened..
+2014-07-04 06:40:58-- num of open connections = 2
+2014-07-04 06:41:05-- New connection interface 118 opened..
+2014-07-04 06:41:05-- num of open connections = 3
+2014-07-04 07:56:45-- New connection interface 59 opened..
+2014-07-04 07:56:45-- num of open connections = 1
+
+2014-07-04 07:56:47-- New connection interface 109 opened..
+2014-07-04 07:56:47-- num of open connections = 2
+
+2014-07-04 07:57:12-- New Message from interface 109 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-04 07:57:20-- Station BT-001 connected on interface 109.
+2014-07-04 07:57:20-- Parsing and executing message(seq = 794b) from interface 109.
+2014-07-04 07:57:42-- Message(sequence = 794b) executed successfully.
+2014-07-04 07:57:42-- sending a message to interface 109:
+{"msg_type":0,"msg_seq":"794b","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-04 07:57:44-- New Message from interface 59 :
+{"msg_seq":"794b","msg_type":2,"station_id":"BT-001","dev_time":"2014-6-12 0:23:45","dev_lap":"db8b94"}
+2014-07-04 07:57:51-- Station BT-001 connected on interface 59.
+2014-07-04 07:57:51-- Station (BT-001) on interface  has a the same station id as an already connected station.
+2014-07-04 07:58:03-- Closing connectin with Stattion(BT-001) on interface 59..
+2014-07-04 07:58:03-- connection closed on interface 59

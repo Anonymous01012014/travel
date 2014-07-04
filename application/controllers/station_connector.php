@@ -87,7 +87,9 @@
 			// Store the new connection to send messages to later
 			$this->clients->attach($conn);
 			echo "New connection! ({$conn->resourceId})\n";
+			echo "num of open connections = " . count($this->clients)."\n";
 			$this->logEvent("New connection interface {$conn->resourceId} opened..");
+			$this->logEvent("num of open connections = " . count($this->clients)."\n");
 		}
 		/**
 		 * Function name : onMessage
@@ -136,29 +138,40 @@
 							//if the returned station id > 0 then the station was found
 							if($station_exists > 0){
 								$this->logEvent("Station ".$station_ID." connected on interface ".$from->resourceId.".");
-								//if the station exists in the database then set the connection authenticated field to true 
-								$from->authenticated = true;
-								//and add the station id to the connection object
-								$from->station_id = $station_exists * 1;
-								$from->station_ID = $station_ID;
-								$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
-								//send the message to the station controller to be parsed and executed
-								$result = shell_exec("php index.php main receiveMessage ".$msg." &");
-								
-								//log the action to the cmd
-								//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
-								//if the result came back from the execution == valid then acknoledge the 
-								//message else just return the error message
-								//echo $result."\n";
-								//if($result == SUCCESS){
-								//setting the last message sequence as the current message
-								$from->last_message_seq = $message_sequence;
-								//send back the result message to the station
-								$this->sendToClient($from,$result,$message_sequence);
-								/*}else{
-									//send back the returned error message to the station
+								//check for station id duplication
+								$duplicate = $this->check_duplicate_station_ID($station_ID);
+								if(!$duplicate){
+									//if the station exists in the database then set the connection authenticated field to true 
+									$from->authenticated = true;
+									//and add the station id to the connection object
+									$from->station_id = $station_exists * 1;
+									$from->station_ID = $station_ID;
+									$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
+									//send the message to the station controller to be parsed and executed
+									$result = shell_exec("php index.php main receiveMessage ".$msg." &");
+									
+									//log the action to the cmd
+									//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
+									//if the result came back from the execution == valid then acknoledge the 
+									//message else just return the error message
+									//echo $result."\n";
+									//if($result == SUCCESS){
+									//setting the last message sequence as the current message
+									$from->last_message_seq = $message_sequence;
+									//send back the result message to the station
 									$this->sendToClient($from,$result,$message_sequence);
-								}*/
+									/*}else{
+										//send back the returned error message to the station
+										$this->sendToClient($from,$result,$message_sequence);
+									}*/
+								}else{
+									echo "Station (".$station_ID.") on interface  has a the same station id as an already connected station\n";
+									$this->logEvent("Station (".$station_ID.") on interface  has a the same station id as an already connected station.");
+									$result = shell_exec("php index.php sendMail send ".$station_ID." &");
+									echo "Closing connectin with Stattion(".$station_ID.") on interface {$from->resourceId}..\n";
+									$this->logEvent("Closing connectin with Stattion(".$station_ID.") on interface {$from->resourceId}..");
+									$from->close();
+								}
 								
 							}else{
 								$this->logEvent("Connected on interface ".$from->resourceId." is not authorized.");
@@ -399,6 +412,46 @@
 		fwrite($fp, $message);
 		fwrite($fp, "\n");
 		fclose($fp);
+	}
+	
+	/**
+	 * file name : check_duplicate_station_ID
+	 * 
+	 * Description :
+	 * this function checks the given station id with the previously connected stations for duplications.
+	 * 
+	 * Created date ; 2-07-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahamad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */    
+	
+	function check_duplicate_station_ID($station_ID)
+	{
+		
+		/*$storage = new SplObjectStorage;
+$foo = (object)['foo' => 'bar'];
+$storage->attach($foo, ['room' => 'bar']);
+
+foreach ($storage as $value) {
+    $obj = $storage->current(); // current object
+    $assoc_key  = $storage->getInfo(); // return, if exists, associated with cur. obj. data; else NULL
+
+    var_dump($obj);
+    var_dump($assoc_key);*/
+		foreach($this->clients as $value){
+			
+			$connection = $this->clients->current();
+			if(isset($connection->station_ID)){
+				echo "station_id = ".$connection->station_ID."\n";
+				//var_dump($this->clients->current());
+				if($connection->station_ID == $station_ID){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	
