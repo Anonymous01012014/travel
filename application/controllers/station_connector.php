@@ -258,7 +258,7 @@
 		public function onClose(ConnectionInterface $conn) {
 			//if the connecion had a station id field disconnect the station
 			if(isset($conn->station_id)){
-				$this->logEvent("connection closed with station ".$conn->station_id." on interface ".$conn->resourceId);
+				$this->logEvent("connection closed with station ".$conn->station_ID." on interface ".$conn->resourceId);
 				shell_exec("php index.php message discoonectStation ".$conn->station_ID." &");
 			}else{
 				$this->logEvent("connection closed on interface ".$conn->resourceId);
