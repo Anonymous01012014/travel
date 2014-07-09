@@ -87,7 +87,7 @@ function addStationToMap(map , stations)
 								  
 						//show site info in the right panel
 						return function(){							
-							infowindow.setContent("<div style='min-width:100px;min-height:30px;'>Longitude: "+ stations[i]['longitude'] + "<br/>Latitude: "+ stations[i]['latitude'] +"</div>");
+							infowindow.setContent("<div style='min-width:100px;min-height:75px;'>Longitude: "+ stations[i]['longitude'] + "<br/>Latitude: "+ stations[i]['latitude'] +"<br/>Car Count:"+stations[i]['pass_count'] +"</div>");
 							  	
 							var station_id = stations[i]['id'];
 							
@@ -451,9 +451,12 @@ function addListeners(poly,map,i){
 		
 		//show site info in the right panel
 		return function(){
-			infowindow.setContent("<div style='min-width:175px;min-height:50px;'>distance: "+travel_times[i]['distance']+" m<br/>"+
+			infowindow.setContent("<div style='min-width:175px;min-height:100px;'>distance: "+travel_times[i]['distance']+" m<br/>"+
 																			"travel time from ("+i+") to ("+(i+1)+"): "+travel_times[i]['travel_time']+" secs<br />"+
-																			"travel time from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_time']+" secs<br /></div>");
+																			"travel count from ("+i+") to ("+(i+1)+"): "+travel_times[i]['travel_count']+" travels<br />"+
+																			"travel time from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_time']+" secs<br />"+
+																			"travel count from ("+(i+1)+") to ("+i+"): "+travel_times_back[i]['travel_count']+" travels<br />"+
+																			"</div>");
 		//infowindow.open(map,this);								
 		};
 	}(i));

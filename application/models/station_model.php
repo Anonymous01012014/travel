@@ -235,6 +235,47 @@ class Station_model extends CI_Model{
 	 }
 	 
 	 /**
+	 * function name : getStationById
+	 * 
+	 * Description : 
+	 * returns the station specified by the given id.
+	 * 
+	 * Created date : 19-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getStationWithPassCountById(){
+		$query = "SELECT  station.[id]
+						  ,station.[station_id]
+						  ,station.[longitude]
+						  ,station.[latitude]
+						  ,station.[status]
+						  ,station.[start_date]
+						  ,station.[end_date]
+						  ,station.[highway_id]
+						  ,COUNT(passing.id) AS pass_count
+				  FROM  [travel_time].[dbo].[station] AS station 
+				  INNER JOIN 
+						[travel_time].[dbo].[passing] AS passing 
+					ON station.id = passing.station_id
+				  WHERE station.[id] = {$this->id}
+				  GROUP BY station.[id]
+						  ,station.[station_id]
+						  ,station.[longitude]
+						  ,station.[latitude]
+						  ,station.[status]
+						  ,station.[start_date]
+						  ,station.[end_date]
+						  ,station.[highway_id]
+				  ";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	 /**
 	 * function name : getStationsbyHighway
 	 * 
 	 * Description : 

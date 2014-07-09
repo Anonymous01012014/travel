@@ -90,7 +90,7 @@ class dashboard extends CI_Controller {
 			//add the start station to the highway stations array
 			$this->station_model->id = $start;
 			
-			$temp_station = $this->station_model->getStationById();
+			$temp_station = $this->station_model->getStationWithPassCountById();
 			
 			if(isset($temp_station[0])){//if the start station exists in the database
 				$highway_stations[] = $temp_station[0];
@@ -113,7 +113,7 @@ class dashboard extends CI_Controller {
 					//get the next station and add it to the highway stations 
 					$this->station_model->id = $next;
 					
-					$temp_station = $this->station_model->getStationById();
+					$temp_station = $this->station_model->getStationWithPassCountById();
 					
 					if(isset($temp_station[0])){
 						$highway_stations[] = $temp_station[0];
