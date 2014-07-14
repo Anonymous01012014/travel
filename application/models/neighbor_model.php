@@ -28,6 +28,12 @@ class Neighbor_model extends CI_Model{
 	//The distance between the station and its neighbor in miles.
 	var $distance = "";
 	
+	//The running average of the current segment of the highway
+	var $travel_time_average = "";
+	
+	//The id of the last travel used to calculate the running average
+	var $last_travel_id = "";
+	
 	
 	/**
      * Constructor
@@ -59,12 +65,16 @@ class Neighbor_model extends CI_Model{
 		$query = "INSERT INTO neighbor(
 							station_id,
 							neighbor_id,
-							distance
+							distance,
+							travel_time_average,
+							last_travel_id
 						) 
 						VALUES (
 							'{$this->station_id}',
 							'{$this->neighbor_id}',
-							'{$this->distance}'
+							'{$this->distance}',
+							'0',
+							'0'
 						);
 					";
 		$this->db->query($query);
@@ -126,7 +136,31 @@ class Neighbor_model extends CI_Model{
 				  SET
 					station_id = {$this->station_id},
 					neighbor_id = {$this->neighbor_id},
-					distance = {$this->distance}			
+					distance = {$this->distance},
+					travel_time_average = {$this->travel_time_average},
+					last_travel_id = {$this->last_travel_id}			
+	 			  WHERE id = {$this->id}";
+		$this->db->query($query);
+		return true;
+	 }
+	 
+	 /**
+	 * function name : modifySegmentAverage
+	 * 
+	 * Description : 
+	 * change the running average value to the given one and the last travel used to the new one's id.
+	 * 
+	 * Created date : 12-07-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function modifySegmentAverage(){
+		$query = "UPDATE neighbor
+				  SET
+					travel_time_average = {$this->travel_time_average},
+					last_travel_id = {$this->last_travel_id}			
 	 			  WHERE id = {$this->id}";
 		$this->db->query($query);
 		return true;
@@ -146,7 +180,41 @@ class Neighbor_model extends CI_Model{
 	 */
 	 public function getAllNeighbors(){
 		$query = "SELECT * 
-				  FROM neighbor";
+				  FROM neighbor
+				  ORDER BY id";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
+	/**
+	 * function name : getAllNeighborsWithLastPassTime
+	 * 
+	 * Description : 
+	 * Returns the data of all of the neighbors in the database along with 
+	 * the timing of the passing of the last travel to be considered for 
+	 * calculating travel time average.
+	 * 
+	 * Created date : 19-04-2014
+	 * Modification date : ---
+	 * Modfication reason : ---
+	 * Author : Ahmad Mulhem Barakat
+	 * contact : molham225@gmail.com
+	 */
+	 public function getAllNeighborsWithLastPassTime(){
+		$query = "SELECT   n.[id] as id
+						  ,n.[distance] as distance
+						  ,n.[station_id] as station_id
+						  ,n.[neighbor_id] as neighbor_id
+						  ,n.[travel_time_average] as travel_time_average
+						  ,n.[last_travel_id] as last_travel_id
+						  ,p.[passing_time] as pass_time
+				  FROM 	 [travel_time].[dbo].[neighbor] AS n 
+						,[travel_time].[dbo].[travel] AS t
+						,[travel_time].[dbo].[passing] AS p
+				  WHERE n.last_travel_id = t.id 
+					AND t.passing_to = p.id
+				  ORDER BY n.id";
 				  
 		$query = $this->db->query($query);
 		return $query->result_array();

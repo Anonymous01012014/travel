@@ -204,3 +204,15 @@
 2014-07-04 07:57:51-- Station (BT-001) on interface  has a the same station id as an already connected station.
 2014-07-04 07:58:03-- Closing connectin with Stattion(BT-001) on interface 59..
 2014-07-04 07:58:03-- connection closed on interface 59
+2014-07-11 06:18:19-- New connection interface 62 opened..
+2014-07-11 06:18:20-- num of open connections = 1
+
+2014-07-11 06:18:20-- connection closed on interface 62
+2014-07-11 06:18:20-- New connection interface 113 opened..
+2014-07-11 06:18:20-- num of open connections = 1
+
+2014-07-11 06:18:21-- connection closed on interface 113
+2014-07-11 06:18:21-- New connection interface 122 opened..
+2014-07-11 06:18:21-- num of open connections = 1
+
+2014-07-11 06:18:31-- connection closed on interface 122

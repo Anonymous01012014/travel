@@ -74,8 +74,8 @@ class Main extends CI_Controller {
 			//define the type of the message 
 			if ($this->message->msg_type == 1)//first deployment message(Registeration message)
 			{
-				if(isset($this->message->dev_long) && isset($this->message->dev_lat)){
-					$result = $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat);
+				if(isset($this->message->dev_long) && isset($this->message->dev_lat) && isset($this->message->highway)){
+					$result = $this->newStation($this->message->station_id,$this->message->dev_long,$this->message->dev_lat,$this->message->highway);
 					echo $result;
 					return;
 				}else{//if the message didn't have the expected fields return this error message
@@ -234,7 +234,7 @@ class Main extends CI_Controller {
 	 * ccreated by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function newStation($station_ID,$long,$lat){
+	public function newStation($station_ID,$long,$lat,$st_highway){
 		
 		//loading station model
 		$this->load->model('station_model');
@@ -245,45 +245,53 @@ class Main extends CI_Controller {
 			//get the highway of the station
 			$highway_name = $this->findoutHighway($long,$lat);
 			if($highway_name){
-				//check if this highway is in the database
-				$highway = $this->checkHighway($highway_name);
-				if(!$highway){
-					//if it doesn't exist add it
-					//load the model
-					$this->load->model("highway_model");
-					//fill the model fields 
-					$this->highway_model->name = $highway_name;
+				if($highway_name == $st_highway)
+				{
+					//check if this highway is in the database
+					$highway = $this->checkHighway($highway_name);
+					if(!$highway){
+						//if it doesn't exist add it
+						//load the model
+						$this->load->model("highway_model");
+						//fill the model fields 
+						$this->highway_model->name = $highway_name;
+						
+						//execute the addition function and get its id
+						$highway_id = $this->highway_model->addHighway();
+					}else{
+						$highway_id = $highway['id']; 
+					}
+					//filling the model fields
+					$this->station_model->station_ID = $station_ID;
+					$this->station_model->longitude = $long;
+					$this->station_model->latitude = $lat;
+					$this->station_model->status = $this->station_model->CONNECTED;
+					$this->station_model->highway_id = $highway_id;
 					
-					//execute the addition function and get its id
-					$highway_id = $this->highway_model->addHighway();
+					//execute station adding function
+					$this->station_model->startStation();
+					
+					//getting the station id
+					$this->station_model->station_ID = $station_ID;
+					
+					$station_id = $this->station_model->getStationByStationID();
+					$station_id = $station_id[0]['id'];
+					
+					//get all of the highway's stations
+					$this->station_model->highway_id = $highway_id;
+					$highway_stations = $this->station_model->getStationsbyHighway();
+					
+					/* finding and adding the new station's neighbors */
+					$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
+						
+					/* recalculate highways beginning and ending stations */
+					$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 				}else{
-					$highway_id = $highway['id']; 
+					$msg_subject = "Highway Mismatch..";
+					$this->sendEmail("The highway name (".$st_highway.") provided with the registration message of station (".$station_ID.") 
+										doesn't match the highway name (".$highway_name.") received from the reverse geocoding service..");
+					return HIGHWAY_NOT_FOUND;
 				}
-				//filling the model fields
-				$this->station_model->station_ID = $station_ID;
-				$this->station_model->longitude = $long;
-				$this->station_model->latitude = $lat;
-				$this->station_model->status = $this->station_model->CONNECTED;
-				$this->station_model->highway_id = $highway_id;
-				
-				//execute station adding function
-				$this->station_model->startStation();
-				
-				//getting the station id
-				$this->station_model->station_ID = $station_ID;
-				
-				$station_id = $this->station_model->getStationByStationID();
-				$station_id = $station_id[0]['id'];
-				
-				//get all of the highway's stations
-				$this->station_model->highway_id = $highway_id;
-				$highway_stations = $this->station_model->getStationsbyHighway();
-				
-				/* finding and adding the new station's neighbors */
-				$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
-					
-				/* recalculate highways beginning and ending stations */
-				$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 			}else{
 				return HIGHWAY_NOT_FOUND;
 			}
@@ -907,6 +915,47 @@ class Main extends CI_Controller {
 	
 	/* End of Travel Section*/
 	
+	
+	/**
+	 * Function name : sendEmail
+	 * 
+	 * Description: 
+	 * This function sends an email to itsstulsa@gmail.com that has the provided subject and message.
+	 * 
+	 * Parameters:
+	 * $subject: The subject of the message to be sent.
+	 * $message: The body of the email will be sent.
+	 * 
+	 * created date: 25-04-2014 
+	 * created by: Eng. Ahmad Mulhem Barakat*
+	 * contact: molham225@gmail.com
+	 */
+	public function sendEmail($subject,$message){
+		
+		$config = Array(
+			'protocol' => 'smtp',
+			'smtp_host' => 'ssl://smtp.googlemail.com',
+			'smtp_port' => 465,
+			'smtp_user' => 'ecobuild.sy@gmail.com',
+			'smtp_pass' => 'ecobuild2120446',
+			'mailtype'  => 'html', 
+			'charset'   => 'iso-8859-1'
+		);
+		
+		$this->load->library("email", $config);
+		$this->email->set_newline("\r\n");
+		$this->email->from("ecobuild.sy@gmail.com","Travel Time");
+		$this->email->to("itsstulsa@gmail.com.");
+		$this->email->subject($subject);
+		$this->email->message($message);
+		
+		
+		$result = $this->email->send();
+		
+		//echo $this->email->print_debugger();
+
+
+	}
 	
 	/* End of file message.php */
 	/* Location: ./application/controllers/message.php */

@@ -142,6 +142,26 @@ class Travel_model extends CI_Model{
 		$query = $this->db->query($query);
 		return $query->result_array();
 	 }
+	 
+	 
+	 public function getSegmentTravels($from_station,$to_station){
+		$query = "SELECT t.id,
+						 t.travel_time,
+						 t.is_valid,
+						 t.passing_from,
+					 	 t.passing_to
+				  FROM travel as t,passing as p_from,passing as p_to
+				  WHERE t.id > {$this->id} 
+					AND t.is_valid = 1
+					AND (t.passing_from = p_from.id AND p_from.station_id = {$from_station})
+					AND (t.passing_to = p_to.id AND p_to.station_id = {$to_station})
+				 ORDER BY t.id
+					";
+				  
+		$query = $this->db->query($query);
+		return $query->result_array();
+	 }
+	 
 	/**
 	 * function name : getTravelByPassings
 	 * 

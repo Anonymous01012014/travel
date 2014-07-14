@@ -1,7 +1,7 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class SendMail extends CI_Controller {
-	public function send($station_ID){
+	public function send($subject,$message){
 		
 		$config = Array(
 			'protocol' => 'smtp',
@@ -24,7 +24,7 @@ class SendMail extends CI_Controller {
 		
 		$result = $this->email->send();
 		
-		echo $this->email->print_debugger();
+		//echo $this->email->print_debugger();
 
 
 	}
