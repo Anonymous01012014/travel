@@ -243,56 +243,53 @@ class Main extends CI_Controller {
 		/* getting the station's highway id */
 		try{
 			//get the highway of the station
-			$highway_name = $this->findoutHighway($long,$lat);
-			if($highway_name){
-				if($highway_name == $st_highway)
-				{
-					//check if this highway is in the database
-					$highway = $this->checkHighway($highway_name);
-					if(!$highway){
-						//if it doesn't exist add it
-						//load the model
-						$this->load->model("highway_model");
-						//fill the model fields 
-						$this->highway_model->name = $highway_name;
-						
-						//execute the addition function and get its id
-						$highway_id = $this->highway_model->addHighway();
-					}else{
-						$highway_id = $highway['id']; 
-					}
-					//filling the model fields
-					$this->station_model->station_ID = $station_ID;
-					$this->station_model->longitude = $long;
-					$this->station_model->latitude = $lat;
-					$this->station_model->status = $this->station_model->CONNECTED;
-					$this->station_model->highway_id = $highway_id;
+			$highway_name = $this->findoutHighway($long,$lat,$st_highway);
+			if($highway_name == $st_highway)
+			{
+				//check if this highway is in the database
+				$highway = $this->checkHighway($highway_name);
+				if(!$highway){
+					//if it doesn't exist add it
+					//load the model
+					$this->load->model("highway_model");
+					//fill the model fields 
+					$this->highway_model->name = $highway_name;
 					
-					//execute station adding function
-					$this->station_model->startStation();
-					
-					//getting the station id
-					$this->station_model->station_ID = $station_ID;
-					
-					$station_id = $this->station_model->getStationByStationID();
-					$station_id = $station_id[0]['id'];
-					
-					//get all of the highway's stations
-					$this->station_model->highway_id = $highway_id;
-					$highway_stations = $this->station_model->getStationsbyHighway();
-					
-					/* finding and adding the new station's neighbors */
-					$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
-						
-					/* recalculate highways beginning and ending stations */
-					$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
+					//execute the addition function and get its id
+					$highway_id = $this->highway_model->addHighway();
 				}else{
-					$msg_subject = "Highway Mismatch..";
-					$this->sendEmail("The highway name (".$st_highway.") provided with the registration message of station (".$station_ID.") 
-										doesn't match the highway name (".$highway_name.") received from the reverse geocoding service..");
-					return HIGHWAY_NOT_FOUND;
+					$highway_id = $highway['id']; 
 				}
+				//filling the model fields
+				$this->station_model->station_ID = $station_ID;
+				$this->station_model->longitude = $long;
+				$this->station_model->latitude = $lat;
+				$this->station_model->status = $this->station_model->CONNECTED;
+				$this->station_model->highway_id = $highway_id;
+				
+				//execute station adding function
+				$this->station_model->startStation();
+				
+				//getting the station id
+				$this->station_model->station_ID = $station_ID;
+				
+				$station_id = $this->station_model->getStationByStationID();
+				$station_id = $station_id[0]['id'];
+				
+				//get all of the highway's stations
+				$this->station_model->highway_id = $highway_id;
+				$highway_stations = $this->station_model->getStationsbyHighway();
+				
+				/* finding and adding the new station's neighbors */
+				$this->findStationNeighbors($station_id,$highway,$highway_id,$highway_stations);
+					
+				/* recalculate highways beginning and ending stations */
+				$this->determineHighwayTerminals($highway,$highway_id,$highway_stations);
 			}else{
+				$msg_subject = "Highway Mismatch..";
+				$msg_body = "The highway name (".$st_highway.") provided with the registration message of station (".$station_ID.") 
+									doesn't match the highway name (".$highway_name.") received from the reverse geocoding service..";
+				$this->sendEmail($msg_subject,$msg_body);
 				return HIGHWAY_NOT_FOUND;
 			}
 		}catch(Exception $e){
@@ -636,12 +633,17 @@ class Main extends CI_Controller {
 	 * Parameters:
 	 * $long: The GPS longitude of the station.
 	 * $lat: The GPS latitude of the station.
+	 * $st_highway: the highway name we got from the station.
 	 * 
 	 * created date: 25-04-2014 
 	 * created by: Eng. Ahmad Mulhem Barakat
 	 * contact: molham225@gmail.com
 	 */
-	public function findoutHighway($long,$lat){
+	public function findoutHighway($long,$lat,$st_highway){
+		//a flag variable is set to true if the st_highway name was found in the returned json from the service.
+		$highway_found =false;
+		$highway_name = "";
+		
 		//load curl_helper
 		$this->load->helper("curl");
 		//forming the revrse geocoding service url to be used to get the highway name
@@ -653,7 +655,56 @@ class Main extends CI_Controller {
 		
 		//$body = substr($body, 14, -1); 
 		$code = json_decode($body);
-		//get the highway name froimthe decoded body
+		
+		//searching for the station highway name in the decoded body
+		if(isset($code->streetSegment->ref)){
+			$highway_refs = getHighwayRefs($code->streetSegment->ref);
+			foreach($highway_refs as $highway_ref){
+				if($highway_ref == $st_highway){
+					$highway_found = true;
+					break;
+				}else{
+					$highway_name = $highway_ref[0];
+				}
+			}
+		}
+		if(isset($code->streetSegment->name) && !$highway_found){
+			$highway = $code->streetSegment->name;
+			if($highway == $st_highway){
+				$highway_found = true;
+			}
+			if($highway_name == "")
+				$highway_name = $highway;
+				
+		}
+		if(isset($code->streetSegment[0]) && !$highway_found){
+			foreach($code->streetSegment as $segment){
+				if(isset($segment->ref) && !$highway_found){
+					$highway_refs = getHighwayRefs($segment->ref);
+					foreach($highway_refs as $highway_ref){
+						if($highway_ref == $st_highway){
+							$highway_found = true;
+							break;
+						}else{
+							if($highway == "")
+								$highway_name = $highway_ref[0];
+						}
+					}
+				}
+				if(isset($segment->name) && !$highway_found){
+					$highway = $segment->name;
+					if($highway == $st_highway){
+						$highway_found = true;
+					}
+					if($highway_name == "")
+						$highway_name = $highway;
+				}
+				if($highway_found){
+					break;
+				}
+			}
+		}
+		/*get the highway name from the decoded body
 		if(isset($code->streetSegment->ref)){
 			$highway = $code->streetSegment->ref;
 		}else if(isset($code->streetSegment[0]->ref)){
@@ -664,12 +715,23 @@ class Main extends CI_Controller {
 			$highway = $code->streetSegment[0]->name;
 		}
 		//if the highway of the given lat,long was found return its name
+		else{//else return false
+			return false;
+		}*/
+		//if the st_highway was found in the returned JSON it'll be returned
+		if($highway_found){
+			return $st_highway;
+		}else{//else we return the highway name returned from the service.
+			return $highway_name;
+		}
+	}
+	
+	
+	public function getHighwayRefs($highway){
 		if(isset($highway)){
 			$highway_fragments = explode(';',$highway);
 			
-			return $highway_fragments[count($highway_fragments) - 1];
-		}else{//else return false
-			return false;
+			return $highway_fragments;
 		}
 	}
 	
