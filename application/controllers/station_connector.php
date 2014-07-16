@@ -182,7 +182,6 @@
 								$from->close();
 							}
 						}else{
-							echo "new msg\n";
 							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
 							$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 							//send the message to the station controller to be parsed
