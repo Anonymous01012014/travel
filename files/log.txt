@@ -216,3 +216,137 @@
 2014-07-11 06:18:21-- num of open connections = 1
 
 2014-07-11 06:18:31-- connection closed on interface 122
+2014-07-16 04:26:16-- New connection interface 62 opened..
+2014-07-16 04:26:16-- num of open connections = 1
+
+2014-07-16 04:29:19-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.13119","dev_long":"-95.87123","highway":"aaa"}
+2014-07-16 04:29:23-- Station BT-002 connected on interface 62.
+2014-07-16 04:29:23-- Parsing and executing message(seq = 0a) from interface 62.
+2014-07-16 04:29:28-- Message(sequence = 0a) executed successfully.
+2014-07-16 04:29:28-- sending a message to interface 62:
+{"msg_type":0,"msg_seq":"0a","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-16 04:32:37-- New connection interface 62 opened..
+2014-07-16 04:32:37-- num of open connections = 1
+
+2014-07-16 04:33:54-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.13119","dev_long":"-95.87123","highway":"aaa"}
+2014-07-16 04:34:01-- Station BT-002 connected on interface 62.
+2014-07-16 04:34:01-- Parsing and executing message(seq = 0a) from interface 62.
+2014-07-16 04:34:16-- sending a message to interface 62:
+{"msg_type":9,"msg_seq":"0a","code":4,"code_msg":"execution error","code_details":"Could not get the highway name from the given long,lat"}
+2014-07-16 04:44:18-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 04:47:30-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 04:49:39-- New connection interface 62 opened..
+2014-07-16 04:49:39-- num of open connections = 1
+
+2014-07-16 04:49:55-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"aaa"}
+2014-07-16 04:49:59-- Station BT-002 connected on interface 62.
+2014-07-16 04:49:59-- Parsing and executing message(seq = 0a) from interface 62.
+2014-07-16 04:50:10-- sending a message to interface 62:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-07-16 04:50:54-- connection closed with station BT-002 on interface 62
+2014-07-16 04:50:54-- New connection interface 120 opened..
+2014-07-16 04:50:54-- num of open connections = 1
+
+2014-07-16 04:51:12-- New Message from interface 120 :
+{"msg_seq":"0B","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"ccc"}
+2014-07-16 04:51:16-- Station BT-002 connected on interface 120.
+2014-07-16 04:51:16-- Parsing and executing message(seq = 0B) from interface 120.
+2014-07-16 04:51:25-- sending a message to interface 120:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-07-16 04:55:31-- New Message from interface 120 :
+{"msg_seq":"0B","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 04:55:49-- New Message from interface 120 :
+{"msg_seq":"0C","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 04:55:49-- Parsing and executing message(seq = 0C) from interface 120.
+2014-07-16 04:56:00-- sending a message to interface 120:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-07-16 04:58:06-- New Message from interface 120 :
+{"msg_seq":"0B","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 04:58:06-- Parsing and executing message(seq = 0B) from interface 120.
+2014-07-16 04:58:24-- Message(sequence = 0B) executed successfully.
+2014-07-16 04:58:24-- sending a message to interface 120:
+{"msg_type":0,"msg_seq":"0B","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-16 04:59:08-- connection closed with station BT-002 on interface 120
+2014-07-16 04:59:26-- New connection interface 146 opened..
+2014-07-16 04:59:26-- num of open connections = 1
+
+2014-07-16 04:59:29-- New Message from interface 146 :
+hi
+2014-07-16 04:59:29-- Invalid message sequence sent from interface 146.
+2014-07-16 04:59:29-- sending a message to interface 146:
+{"msg_type":9,"msg_seq":"","code":3,"code_msg":"invalid message","code_details":"Error while parsing the message!"}
+2014-07-16 04:59:29-- Connected on interface 146 is not authorized.
+2014-07-16 04:59:29-- sending a message to interface 146:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-07-16 04:59:29-- connection closed on interface 146
+2014-07-16 05:01:30-- New connection interface 162 opened..
+2014-07-16 05:01:30-- num of open connections = 1
+
+2014-07-16 05:01:44-- New Message from interface 162 :
+{"msg_seq":"0B","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"ddd"}
+2014-07-16 05:01:48-- Station BT-002 connected on interface 162.
+2014-07-16 05:01:48-- Parsing and executing message(seq = 0B) from interface 162.
+2014-07-16 05:01:56-- sending a message to interface 162:
+{"msg_type":9,"msg_seq":"0B","code":4,"code_msg":"execution error","code_details":"Could not get the highway name from the given long,lat"}
+2014-07-16 05:02:36-- connection closed with station BT-002 on interface 162
+2014-07-16 05:07:26-- New connection interface 178 opened..
+2014-07-16 05:07:26-- num of open connections = 1
+
+2014-07-16 05:07:51-- New connection interface 62 opened..
+2014-07-16 05:07:51-- num of open connections = 1
+
+2014-07-16 05:07:58-- New Message from interface 62 :
+{"msg_seq":"0B","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 05:08:01-- Station BT-002 connected on interface 62.
+2014-07-16 05:08:01-- Parsing and executing message(seq = 0B) from interface 62.
+2014-07-16 05:08:13-- sending a message to interface 62:
+{"msg_type":9,"msg_seq":"","code":1,"code_msg":"unauthorized","code_details":"This connection is unauthorized so it will be closed!"}
+2014-07-16 05:16:21-- New connection interface 62 opened..
+2014-07-16 05:16:21-- num of open connections = 1
+
+2014-07-16 05:16:48-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"South Sandusky Avenue"}
+2014-07-16 05:16:52-- Station BT-002 connected on interface 62.
+2014-07-16 05:16:52-- Parsing and executing message(seq = 0a) from interface 62.
+2014-07-16 05:17:07-- Message(sequence = 0a) executed successfully.
+2014-07-16 05:17:07-- sending a message to interface 62:
+{"msg_type":0,"msg_seq":"0a","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-16 05:17:28-- New Message from interface 62 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"ggg"}
+2014-07-16 05:17:47-- New Message from interface 62 :
+{"msg_seq":"0asss","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"kkk"}
+2014-07-16 05:17:47-- Parsing and executing message(seq = 0asss) from interface 62.
+2014-07-16 05:17:55-- Message(sequence = 0asss) executed successfully.
+2014-07-16 05:17:55-- sending a message to interface 62:
+{"msg_type":0,"msg_seq":"0asss","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-16 05:16:20-- connection closed with station BT-002 on interface 62
+2014-07-16 05:16:21-- New connection interface 127 opened..
+2014-07-16 05:16:21-- num of open connections = 1
+
+2014-07-16 05:16:38-- New Message from interface 127 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"LLL"}
+2014-07-16 05:16:46-- Station BT-002 connected on interface 127.
+2014-07-16 05:16:46-- Parsing and executing message(seq = 0a) from interface 127.
+2014-07-16 05:16:58-- Message(sequence = 0a) executed successfully.
+2014-07-16 05:16:58-- sending a message to interface 127:
+{"msg_type":0,"msg_seq":"0a","code":0,"code_msg":"success","code_details":"Message executed successfully"}
+2014-07-16 05:18:01-- New Message from interface 127 :
+{"msg_seq":"tt","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"fffe"}
+2014-07-16 05:18:01-- Parsing and executing message(seq = tt) from interface 127.
+2014-07-16 05:18:16-- sending a message to interface 127:
+{"msg_type":9,"msg_seq":"tt","code":4,"code_msg":"execution error","code_details":"Could not get the highway name from the given long,lat"}
+2014-07-16 05:18:28-- connection closed with station BT-002 on interface 127
+2014-07-16 05:18:29-- New connection interface 148 opened..
+2014-07-16 05:18:29-- num of open connections = 1
+
+2014-07-16 05:18:48-- New Message from interface 148 :
+{"msg_seq":"0a","msg_type":1,"station_id":"BT-002","dev_lat":"36.10156","dev_long":"-95.92621","highway":"dddd"}
+2014-07-16 05:18:53-- Station BT-002 connected on interface 148.
+2014-07-16 05:18:53-- Parsing and executing message(seq = 0a) from interface 148.
+2014-07-16 05:19:10-- sending a message to interface 148:
+{"msg_type":9,"msg_seq":"0a","code":4,"code_msg":"execution error","code_details":"Could not get the highway name from the given long,lat"}

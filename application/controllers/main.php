@@ -680,7 +680,7 @@ class Main extends CI_Controller {
 		if(isset($code->streetSegment[0]) && !$highway_found){
 			foreach($code->streetSegment as $segment){
 				if(isset($segment->ref) && !$highway_found){
-					$highway_refs = getHighwayRefs($segment->ref);
+					$highway_refs = $this->getHighwayRefs($segment->ref);
 					foreach($highway_refs as $highway_ref){
 						if($highway_ref == $st_highway){
 							$highway_found = true;
@@ -1007,7 +1007,7 @@ class Main extends CI_Controller {
 		$this->load->library("email", $config);
 		$this->email->set_newline("\r\n");
 		$this->email->from("ecobuild.sy@gmail.com","Travel Time");
-		$this->email->to("itsstulsa@gmail.com.");
+		$this->email->to("molham225@gmail.com");
 		$this->email->subject($subject);
 		$this->email->message($message);
 		

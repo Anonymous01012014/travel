@@ -149,7 +149,7 @@
 									$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 									//send the message to the station controller to be parsed and executed
 									$result = shell_exec("php index.php main receiveMessage ".$msg." &");
-									
+									echo $result;
 									//log the action to the cmd
 									//echo sprintf('Connection %d sending main "%s"\n', $from->resourceId, $msg);
 									//if the result came back from the execution == valid then acknoledge the 
@@ -170,6 +170,7 @@
 									$result = shell_exec("php index.php sendMail send ".$station_ID." &");
 									echo "Closing connectin with Stattion(".$station_ID.") on interface {$from->resourceId}..\n";
 									$this->logEvent("Closing connectin with Stattion(".$station_ID.") on interface {$from->resourceId}..");
+									echo "closing\n";
 									$from->close();
 								}
 								
@@ -177,10 +178,11 @@
 								$this->logEvent("Connected on interface ".$from->resourceId." is not authorized.");
 								echo "Unauthorized connection {$from->resourceId} closed 1\n";
 								$this->sendToClient($from,$this->UNAUTHORIZED,"");
+								echo "closing\n";
 								$from->close();
 							}
 						}else{
-							
+							echo "new msg\n";
 							//echo sprintf('Connection %d sending message "%s"\n', $from->resourceId, $msg);
 							$this->logEvent("Parsing and executing message(seq = ".$message_sequence.") from interface ".$from->resourceId.".");
 							//send the message to the station controller to be parsed
@@ -190,6 +192,7 @@
 							//echo "\n".$result."\n";
 							//if($result == |SUCCESS){
 								//setting the last message sequence as the current message
+								echo $result;
 							$from->last_message_seq = $message_sequence;
 							//}
 							//send back the result message to the station
@@ -210,6 +213,7 @@
 					echo "Unauthorized connection {$from->resourceId} closed 2\n";
 					$code = $this->UNAUTHORIZED;
 					$this->sendToClient($from,$code,"");
+					echo "closing\n";
 					$from->close();
 				}
 			}
