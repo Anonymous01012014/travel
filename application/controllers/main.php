@@ -644,6 +644,8 @@ class Main extends CI_Controller {
 		$highway_found =false;
 		$highway_name = "";
 		
+		$st_highway_uppercase = strtoupper($st_highway);
+		
 		//load curl_helper
 		$this->load->helper("curl");
 		//forming the revrse geocoding service url to be used to get the highway name
@@ -660,7 +662,8 @@ class Main extends CI_Controller {
 		if(isset($code->streetSegment->ref)){
 			$highway_refs = getHighwayRefs($code->streetSegment->ref);
 			foreach($highway_refs as $highway_ref){
-				if($highway_ref == $st_highway){
+				$highway_ref_uppercase = strtoupper($highway_ref);
+				if($highway_ref_uppercase == $st_highway_uppercase){
 					$highway_found = true;
 					break;
 				}else{
@@ -670,7 +673,8 @@ class Main extends CI_Controller {
 		}
 		if(isset($code->streetSegment->name) && !$highway_found){
 			$highway = $code->streetSegment->name;
-			if($highway == $st_highway){
+			$highway_uppercase = strtoupper($highway);
+			if($highway_uppercase == $st_highway_uppercase){
 				$highway_found = true;
 			}
 			if($highway_name == "")
@@ -682,7 +686,8 @@ class Main extends CI_Controller {
 				if(isset($segment->ref) && !$highway_found){
 					$highway_refs = $this->getHighwayRefs($segment->ref);
 					foreach($highway_refs as $highway_ref){
-						if($highway_ref == $st_highway){
+						$highway_ref_uppercase = strtoupper($highway_ref);
+						if($highway_ref_uppercase == $st_highway_uppercase){
 							$highway_found = true;
 							break;
 						}else{
@@ -693,7 +698,8 @@ class Main extends CI_Controller {
 				}
 				if(isset($segment->name) && !$highway_found){
 					$highway = $segment->name;
-					if($highway == $st_highway){
+					$highway_uppercase = strtoupper($highway);
+					if($highway_uppercase == $st_highway_uppercase){
 						$highway_found = true;
 					}
 					if($highway_name == "")
