@@ -16,7 +16,7 @@ class SendMail extends CI_Controller {
 		$this->load->library("email", $config);
 		$this->email->set_newline("\r\n");
 		$this->email->from("ecobuild.sy@gmail.com","Travel Time");
-		$this->email->to("itsstulsa@gmail.com.");
+		$this->email->to("itsstulsa@gmail.com");
 		$this->email->subject("Duplicate Station ID");
 		$this->email->message("A new station (".$station_ID.") is trying to connect the server <br />
 							while there is another station with the same id already connected to the server!! ");
