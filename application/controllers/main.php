@@ -660,7 +660,7 @@ class Main extends CI_Controller {
 		
 		//searching for the station highway name in the decoded body
 		if(isset($code->streetSegment->ref)){
-			$highway_refs = getHighwayRefs($code->streetSegment->ref);
+			$highway_refs = $this->getHighwayRefs($code->streetSegment->ref);
 			foreach($highway_refs as $highway_ref){
 				$highway_ref_uppercase = strtoupper($highway_ref);
 				if($highway_ref_uppercase == $st_highway_uppercase){
