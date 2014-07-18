@@ -681,7 +681,7 @@ class Main extends CI_Controller {
 				$highway_name = $highway;
 				
 		}
-		if(isset($code->streetSegment[0]) && !$highway_found){
+		if(is_array($code->streetSegment) && !$highway_found){
 			foreach($code->streetSegment as $segment){
 				if(isset($segment->ref) && !$highway_found){
 					$highway_refs = $this->getHighwayRefs($segment->ref);
